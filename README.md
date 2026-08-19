@@ -28,9 +28,14 @@ Initial August Hackathon version by 李明坤.
   USB, serial, HID, and Bluetooth.
 - Build strict headers from declarative policy intents.
 - Use a built-in browser capability catalog to create recommended policies.
+- Generate built-in profile headers for strict, balanced, media-app, and
+  device-lab deployments.
 - Compare two policies and classify loosened or tightened changes.
 - Summarize how many features are disabled, self-only, wildcard, or delegated to
   explicit origins.
+- Parse raw HTTP response header blocks copied from `curl -I` output.
+- Audit the effective policy from modern and legacy response headers.
+- Render feature/origin access matrices for documentation and reviews.
 - Render stable text reports for CI logs or command-line tools.
 
 ## Quick Start
@@ -74,6 +79,8 @@ Expected highlights:
 ```text
 permscope demo
 camera cross-site=false
+effective=permissions-policy
+permscope access matrix document=https://app.example
 permscope: pass
 ```
 
@@ -93,7 +100,14 @@ permscope: pass
   normalized headers from code.
 - `known_features`, `known_feature`, `recommended_header`, and
   `catalog_baseline` provide a practical browser capability catalog.
+- `built_in_profiles`, `profile_header`, `profile_policy`, `profile_baseline`,
+  and `render_profile` provide deployment-oriented policy presets.
 - `summarize` and `render_summary` produce compact dashboard-friendly counts.
+- `parse_header_block`, `permissions_policy_header`, `feature_policy_header`,
+  `policy_from_headers`, `audit_header_block`, and `render_header_audit` work
+  with raw HTTP response header blocks.
+- `access_matrix`, `matrix_cell`, and `render_access_matrix` explain whether
+  selected features are allowed for selected origins.
 - `diff` and `render_diffs` show feature-level policy changes.
 - `render(policy)` and `render_report(report)` produce stable text output.
 
@@ -113,10 +127,11 @@ Generated `pkg.generated.mbti` files document the public MoonBit API.
 
 ## Project Boundary
 
-`permscope` is intentionally a small policy library. It does not make HTTP
-requests, start a web server, or depend on a browser runtime. Host applications
-can use it inside a gateway, static analysis tool, CI check, documentation
-generator, or web framework adapter.
+`permscope` is intentionally a policy library. It can parse response header
+text that a caller already has, but it does not make HTTP requests, start a web
+server, or depend on a browser runtime. Host applications can use it inside a
+gateway, static analysis tool, CI check, documentation generator, or web
+framework adapter.
 
 ## License
 

@@ -19,6 +19,11 @@ browser runtime, or framework adapter.
 - `PolicyDiff` records feature-level changes between two parsed policies.
 - `FeatureSpec` stores the built-in browser capability catalog.
 - `PolicySummary` keeps count-style output for dashboards and release notes.
+- `BaselineProfile` represents built-in policy presets for common deployments.
+- `HeaderSet` and `HeaderAudit` let callers audit copied HTTP response header
+  blocks without adding a network client.
+- `AccessMatrix` records feature/origin decisions for documentation and review
+  workflows.
 
 ## Parsing Strategy
 
@@ -42,6 +47,28 @@ all-origins, and self-plus-origins. This keeps generated headers stable and easy
 to review. The diff function compares normalized directive text and classifies
 changes as added, removed, changed, loosened, or tightened based on allowlist
 power.
+
+## Header-Block Strategy
+
+The header-block parser accepts line-oriented response header text, ignores HTTP
+status lines, classifies modern and legacy policy headers, and preserves
+non-fatal parse issues as warnings. Modern `Permissions-Policy` takes precedence
+when both modern and legacy headers are present; legacy `Feature-Policy` is used
+only as a migration fallback.
+
+## Profile Strategy
+
+Profiles are generated from the same feature catalog as the recommended header.
+`strict` disables every known feature, `balanced` follows the catalog defaults,
+`media-app` keeps same-origin media capabilities available, and `device-lab`
+allows selected hardware features only for self and caller-provided trusted
+origins.
+
+## Matrix Strategy
+
+The access matrix runs the same `allows` decision across selected features and
+origins. It is intentionally textual so a caller can paste the result into CI
+logs, release notes, or review comments without needing a UI dependency.
 
 ## Catalog Strategy
 

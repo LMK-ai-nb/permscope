@@ -16,9 +16,23 @@ fn main {
       @permscope.self_only("fullscreen"),
     ]),
   )
+  let header_block = "HTTP/2 200\nPermissions-Policy: " +
+    header +
+    "\nX-Content-Type-Options: nosniff"
+  let header_audit = @permscope.audit_header_block(
+    header_block,
+    @permscope.catalog_baseline("https://app.example"),
+  )
+  let matrix = @permscope.access_matrix(
+    policy,
+    ["camera", "fullscreen", "usb"],
+    "https://app.example",
+    ["https://app.example", "https://video.example"],
+  )
   println("permscope demo")
   println("normalized=" + @permscope.render(policy))
   println(@permscope.render_summary(summary))
+  println(@permscope.render_profile(@permscope.media_app_profile(), []))
   println(
     "fullscreen self=" +
     @permscope.allows(
@@ -44,5 +58,7 @@ fn main {
       "camera 'none'; fullscreen 'self' https://video.example",
     ),
   )
+  println(@permscope.render_header_audit(header_audit))
+  println(@permscope.render_access_matrix(matrix))
   println(@permscope.render_diffs(@permscope.diff(policy, relaxed)))
 }

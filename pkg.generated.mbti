@@ -6,15 +6,23 @@ import {
 }
 
 // Values
+pub fn access_matrix(Policy, Array[String], String, Array[String]) -> AccessMatrix
+
 pub fn all_origins(String) -> PolicyIntent
 
 pub fn allows(Policy, String, String, String) -> Bool
 
 pub fn audit(Policy, Baseline) -> AuditReport
 
+pub fn audit_header_block(String, Baseline) -> HeaderAudit
+
+pub fn balanced_profile() -> BaselineProfile
+
 pub fn build(Array[PolicyIntent]) -> String
 
 pub fn build_policy(Array[PolicyIntent]) -> Policy
+
+pub fn built_in_profiles() -> Array[BaselineProfile]
 
 pub fn catalog_baseline(String) -> Baseline
 
@@ -22,9 +30,13 @@ pub fn default_baseline(String) -> Baseline
 
 pub fn deny(String) -> PolicyIntent
 
+pub fn device_lab_profile() -> BaselineProfile
+
 pub fn diff(Policy, Policy) -> Array[PolicyDiff]
 
 pub fn directive(Policy, String) -> Directive?
+
+pub fn feature_policy_header(HeaderSet) -> String?
 
 pub fn known_feature(String) -> FeatureSpec?
 
@@ -32,17 +44,43 @@ pub fn known_feature_names() -> Array[String]
 
 pub fn known_features() -> Array[FeatureSpec]
 
+pub fn matrix_cell(AccessMatrix, String, String) -> AccessCell?
+
+pub fn media_app_profile() -> BaselineProfile
+
 pub fn migrate_feature_policy(String) -> String
 
 pub fn parse(String) -> Policy
 
 pub fn parse_feature_policy(String) -> Policy
 
+pub fn parse_header_block(String) -> HeaderSet
+
+pub fn permissions_policy_header(HeaderSet) -> String?
+
+pub fn policy_from_headers(HeaderSet) -> Policy
+
+pub fn profile_baseline(BaselineProfile, String) -> Baseline
+
+pub fn profile_header(BaselineProfile, Array[String]) -> String
+
+pub fn profile_intents(BaselineProfile, Array[String]) -> Array[PolicyIntent]
+
+pub fn profile_name(BaselineProfile) -> String
+
+pub fn profile_policy(BaselineProfile, Array[String]) -> Policy
+
 pub fn recommended_header() -> String
 
 pub fn render(Policy) -> String
 
+pub fn render_access_matrix(AccessMatrix) -> String
+
 pub fn render_diffs(Array[PolicyDiff]) -> String
+
+pub fn render_header_audit(HeaderAudit) -> String
+
+pub fn render_profile(BaselineProfile, Array[String]) -> String
 
 pub fn render_report(AuditReport) -> String
 
@@ -52,11 +90,26 @@ pub fn self_and_origins(String, Array[String]) -> PolicyIntent
 
 pub fn self_only(String) -> PolicyIntent
 
+pub fn strict_profile() -> BaselineProfile
+
 pub fn summarize(Policy, Baseline) -> PolicySummary
 
 // Errors
 
 // Types and methods
+pub struct AccessCell {
+  feature : String
+  target_origin : String
+  allowed : Bool
+} derive(Eq, @debug.Debug)
+
+pub struct AccessMatrix {
+  document_origin : String
+  features : Array[String]
+  target_origins : Array[String]
+  cells : Array[AccessCell]
+} derive(Eq, @debug.Debug)
+
 pub enum AllowToken {
   TokenSelf
   TokenAll
@@ -72,6 +125,13 @@ pub struct Baseline {
   document_origin : String
   sensitive_features : Array[String]
   deny_by_default : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub enum BaselineProfile {
+  ProfileStrict
+  ProfileBalanced
+  ProfileMediaApp
+  ProfileDeviceLab
 } derive(Eq, @debug.Debug)
 
 pub enum DiffKind {
@@ -114,6 +174,34 @@ pub struct Finding {
   code : String
   feature : String?
   message : String
+} derive(Eq, @debug.Debug)
+
+pub struct HeaderAudit {
+  headers : HeaderSet
+  modern : Policy?
+  legacy : Policy?
+  effective : Policy
+  report : AuditReport
+  used_legacy : Bool
+  migration : String
+} derive(Eq, @debug.Debug)
+
+pub enum HeaderKind {
+  HeaderPermissionsPolicy
+  HeaderFeaturePolicy
+  HeaderOther
+} derive(Eq, @debug.Debug)
+
+pub struct HeaderLine {
+  name : String
+  value : String
+  index : Int
+  kind : HeaderKind
+} derive(Eq, @debug.Debug)
+
+pub struct HeaderSet {
+  lines : Array[HeaderLine]
+  warnings : Array[ParseWarning]
 } derive(Eq, @debug.Debug)
 
 pub struct ParseWarning {

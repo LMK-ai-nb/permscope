@@ -24,6 +24,10 @@ Coverage focus:
 - Declarative policy builder output.
 - Built-in feature catalog lookup.
 - Recommended header audit behavior.
+- Built-in deployment profile generation.
+- Raw HTTP response header-block parsing and precedence.
+- Legacy header fallback migration from header blocks.
+- Feature/origin access matrix rendering.
 - Policy summary counts.
 - Feature-level policy diff rendering.
 - Internal feature and origin normalization helpers.

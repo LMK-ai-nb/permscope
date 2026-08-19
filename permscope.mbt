@@ -134,6 +134,68 @@ pub struct PolicySummary {
 } derive(Eq, @debug.Debug)
 
 ///|
+/// Built-in policy profiles for common web application shapes.
+pub enum BaselineProfile {
+  ProfileStrict
+  ProfileBalanced
+  ProfileMediaApp
+  ProfileDeviceLab
+} derive(Eq, @debug.Debug)
+
+///|
+/// Kind of HTTP response header recognized by the header-block parser.
+pub enum HeaderKind {
+  HeaderPermissionsPolicy
+  HeaderFeaturePolicy
+  HeaderOther
+} derive(Eq, @debug.Debug)
+
+///|
+/// One parsed HTTP response header line.
+pub struct HeaderLine {
+  name : String
+  value : String
+  index : Int
+  kind : HeaderKind
+} derive(Eq, @debug.Debug)
+
+///|
+/// Parsed HTTP response header block, suitable for `curl -I` output.
+pub struct HeaderSet {
+  lines : Array[HeaderLine]
+  warnings : Array[ParseWarning]
+} derive(Eq, @debug.Debug)
+
+///|
+/// End-to-end audit result for a raw HTTP response header block.
+pub struct HeaderAudit {
+  headers : HeaderSet
+  modern : Policy?
+  legacy : Policy?
+  effective : Policy
+  report : AuditReport
+  used_legacy : Bool
+  migration : String
+} derive(Eq, @debug.Debug)
+
+///|
+/// One feature/origin access decision in a matrix report.
+pub struct AccessCell {
+  feature : String
+  target_origin : String
+  allowed : Bool
+} derive(Eq, @debug.Debug)
+
+///|
+/// Matrix view of many features across many target origins.
+pub struct AccessMatrix {
+  document_origin : String
+  features : Array[String]
+  target_origins : Array[String]
+  cells : Array[AccessCell]
+} derive(Eq, @debug.Debug)
+
+///|
 /// Create an intent that disables a feature.
 pub fn deny(feature : String) -> PolicyIntent {
   IntentDeny(feature)
@@ -452,6 +514,328 @@ pub fn render_summary(summary : PolicySummary) -> String {
   summary.explicit_origins.to_string() +
   " missing_sensitive=" +
   summary.missing_sensitive.join("|")
+}
+
+///|
+/// Return all built-in policy profiles.
+pub fn built_in_profiles() -> Array[BaselineProfile] {
+  [ProfileStrict, ProfileBalanced, ProfileMediaApp, ProfileDeviceLab]
+}
+
+///|
+/// Profile that disables every known browser capability.
+pub fn strict_profile() -> BaselineProfile {
+  ProfileStrict
+}
+
+///|
+/// Profile that follows the package's default recommendation catalog.
+pub fn balanced_profile() -> BaselineProfile {
+  ProfileBalanced
+}
+
+///|
+/// Profile for media-heavy sites that need same-origin playback features.
+pub fn media_app_profile() -> BaselineProfile {
+  ProfileMediaApp
+}
+
+///|
+/// Profile for hardware labs that delegate device features to trusted origins.
+pub fn device_lab_profile() -> BaselineProfile {
+  ProfileDeviceLab
+}
+
+///|
+/// Return a stable name for a built-in profile.
+pub fn profile_name(profile : BaselineProfile) -> String {
+  match profile {
+    ProfileStrict => "strict"
+    ProfileBalanced => "balanced"
+    ProfileMediaApp => "media-app"
+    ProfileDeviceLab => "device-lab"
+  }
+}
+
+///|
+/// Build declarative intents for a built-in profile.
+pub fn profile_intents(
+  profile : BaselineProfile,
+  trusted_origins : Array[String],
+) -> Array[PolicyIntent] {
+  let intents : Array[PolicyIntent] = []
+  for spec in known_features() {
+    intents.push(profile_intent(profile, spec.feature, trusted_origins))
+  }
+  intents
+}
+
+///|
+/// Render a complete header for a built-in profile.
+pub fn profile_header(
+  profile : BaselineProfile,
+  trusted_origins : Array[String],
+) -> String {
+  build(profile_intents(profile, trusted_origins))
+}
+
+///|
+/// Build a parsed policy for a built-in profile.
+pub fn profile_policy(
+  profile : BaselineProfile,
+  trusted_origins : Array[String],
+) -> Policy {
+  build_policy(profile_intents(profile, trusted_origins))
+}
+
+///|
+/// Build an audit baseline that matches a built-in profile.
+pub fn profile_baseline(
+  profile : BaselineProfile,
+  document_origin : String,
+) -> Baseline {
+  let sensitive_features : Array[String] = []
+  let deny_by_default : Array[String] = []
+  for spec in known_features() {
+    if profile_marks_sensitive(profile, spec) {
+      sensitive_features.push(spec.feature)
+    }
+    if profile_requires_cross_site_guard(profile, spec.feature) {
+      deny_by_default.push(spec.feature)
+    }
+  }
+  {
+    document_origin: normalize_origin(document_origin),
+    sensitive_features,
+    deny_by_default,
+  }
+}
+
+///|
+/// Render profile metadata and generated header for documentation or logs.
+pub fn render_profile(
+  profile : BaselineProfile,
+  trusted_origins : Array[String],
+) -> String {
+  let lines : Array[String] = []
+  lines.push("profile=" + profile_name(profile))
+  lines.push("trusted_origins=" + trusted_origins.join("|"))
+  lines.push("header=" + profile_header(profile, trusted_origins))
+  lines.join("\n")
+}
+
+///|
+/// Parse an HTTP response header block such as `curl -I` output.
+pub fn parse_header_block(block : String) -> HeaderSet {
+  let lines : Array[HeaderLine] = []
+  let warnings : Array[ParseWarning] = []
+  let mut index = 0
+  for line_view in block.split("\n") {
+    index = index + 1
+    let raw = line_view.to_owned()
+    let clean = trim(raw)
+    if clean == "" {
+      continue
+    }
+    if clean.to_lower().has_prefix("http/") {
+      continue
+    }
+    if raw.has_prefix(" ") || raw.has_prefix("\t") {
+      warnings.push({
+        index,
+        message: "folded header continuation is ignored",
+        text: clean,
+      })
+      continue
+    }
+    match clean.find(":") {
+      None =>
+        warnings.push({
+          index,
+          message: "header line is missing ':'",
+          text: clean,
+        })
+      Some(colon) => {
+        let name = normalize_header_name(clean[:colon].to_owned())
+        let value = trim(clean[colon + 1:].to_owned())
+        if name == "" {
+          warnings.push({ index, message: "empty header name", text: clean })
+        } else {
+          lines.push({ name, value, index, kind: classify_header_name(name) })
+        }
+      }
+    }
+  }
+  { lines, warnings }
+}
+
+///|
+/// Return combined modern `Permissions-Policy` header value, if present.
+pub fn permissions_policy_header(headers : HeaderSet) -> String? {
+  joined_header_value(headers, HeaderPermissionsPolicy, ", ")
+}
+
+///|
+/// Return combined legacy `Feature-Policy` header value, if present.
+pub fn feature_policy_header(headers : HeaderSet) -> String? {
+  joined_header_value(headers, HeaderFeaturePolicy, "; ")
+}
+
+///|
+/// Choose the effective policy from parsed headers.
+///
+/// Modern `Permissions-Policy` takes precedence. Legacy `Feature-Policy` is
+/// used only when no modern header is present.
+pub fn policy_from_headers(headers : HeaderSet) -> Policy {
+  match permissions_policy_header(headers) {
+    Some(value) => prepend_warnings(parse(value), headers.warnings)
+    None =>
+      match feature_policy_header(headers) {
+        Some(value) =>
+          prepend_warnings(parse_feature_policy(value), headers.warnings)
+        None => prepend_warnings(parse(""), headers.warnings)
+      }
+  }
+}
+
+///|
+/// Audit a raw HTTP response header block.
+pub fn audit_header_block(block : String, baseline : Baseline) -> HeaderAudit {
+  let headers = parse_header_block(block)
+  let modern_value = permissions_policy_header(headers)
+  let legacy_value = feature_policy_header(headers)
+  let modern = match modern_value {
+    Some(value) => Some(parse(value))
+    None => None
+  }
+  let legacy = match legacy_value {
+    Some(value) => Some(parse_feature_policy(value))
+    None => None
+  }
+  let effective = policy_from_headers(headers)
+  let report = audit(effective, baseline)
+  let migration = match legacy_value {
+    Some(value) => migrate_feature_policy(value)
+    None => ""
+  }
+  {
+    headers,
+    modern,
+    legacy,
+    effective,
+    report,
+    used_legacy: modern_value is None && legacy_value is Some(_),
+    migration,
+  }
+}
+
+///|
+/// Render an end-to-end header audit result.
+pub fn render_header_audit(audit : HeaderAudit) -> String {
+  let lines : Array[String] = []
+  lines.push("permscope header audit")
+  lines.push("headers=" + audit.headers.lines.length().to_string())
+  match audit.modern {
+    Some(_) => lines.push("effective=permissions-policy")
+    None =>
+      if audit.used_legacy {
+        lines.push("effective=feature-policy-migration")
+      } else {
+        lines.push("effective=missing")
+      }
+  }
+  if audit.migration != "" {
+    lines.push("migration=" + audit.migration)
+  }
+  lines.push(render_report(audit.report))
+  lines.join("\n")
+}
+
+///|
+/// Build a many-feature, many-origin access matrix.
+pub fn access_matrix(
+  policy : Policy,
+  features : Array[String],
+  document_origin : String,
+  target_origins : Array[String],
+) -> AccessMatrix {
+  let normalized_document = normalize_origin(document_origin)
+  let normalized_features : Array[String] = []
+  let normalized_targets : Array[String] = []
+  let cells : Array[AccessCell] = []
+  for feature in features {
+    let normalized = normalize_feature(feature)
+    if normalized != "" {
+      normalized_features.push(normalized)
+    }
+  }
+  for target in target_origins {
+    let normalized = normalize_origin(target)
+    if normalized != "" {
+      normalized_targets.push(normalized)
+    }
+  }
+  for feature in normalized_features {
+    for target in normalized_targets {
+      cells.push({
+        feature,
+        target_origin: target,
+        allowed: allows(policy, feature, normalized_document, target),
+      })
+    }
+  }
+  {
+    document_origin: normalized_document,
+    features: normalized_features,
+    target_origins: normalized_targets,
+    cells,
+  }
+}
+
+///|
+/// Find one cell in an access matrix.
+pub fn matrix_cell(
+  matrix : AccessMatrix,
+  feature : String,
+  target_origin : String,
+) -> AccessCell? {
+  let wanted_feature = normalize_feature(feature)
+  let wanted_origin = normalize_origin(target_origin)
+  for cell in matrix.cells {
+    if cell.feature == wanted_feature && cell.target_origin == wanted_origin {
+      return Some(cell)
+    }
+  }
+  None
+}
+
+///|
+/// Render an access matrix as compact line-oriented text.
+pub fn render_access_matrix(matrix : AccessMatrix) -> String {
+  let lines : Array[String] = []
+  lines.push("permscope access matrix document=" + matrix.document_origin)
+  let header : Array[String] = ["feature"]
+  for target in matrix.target_origins {
+    header.push(target)
+  }
+  lines.push(header.join(" "))
+  for feature in matrix.features {
+    let row : Array[String] = [feature]
+    for target in matrix.target_origins {
+      match matrix_cell(matrix, feature, target) {
+        None => row.push("n/a")
+        Some(cell) => {
+          let mut label = "deny"
+          if cell.allowed {
+            label = "allow"
+          }
+          row.push(label)
+        }
+      }
+    }
+    lines.push(row.join(" "))
+  }
+  lines.join("\n")
 }
 
 ///|
@@ -1003,6 +1387,97 @@ fn recommended_intents() -> Array[PolicyIntent] {
 }
 
 ///|
+fn profile_intent(
+  profile : BaselineProfile,
+  feature : String,
+  trusted_origins : Array[String],
+) -> PolicyIntent {
+  match profile {
+    ProfileStrict => deny(feature)
+    ProfileBalanced =>
+      match known_feature(feature) {
+        Some(spec) => spec.recommended
+        None => deny(feature)
+      }
+    ProfileMediaApp => media_profile_intent(feature)
+    ProfileDeviceLab => device_lab_profile_intent(feature, trusted_origins)
+  }
+}
+
+///|
+fn media_profile_intent(feature : String) -> PolicyIntent {
+  match normalize_feature(feature) {
+    "autoplay"
+    | "encrypted-media"
+    | "fullscreen"
+    | "speaker-selection"
+    | "web-share" => self_only(feature)
+    _ => deny(feature)
+  }
+}
+
+///|
+fn device_lab_profile_intent(
+  feature : String,
+  trusted_origins : Array[String],
+) -> PolicyIntent {
+  match normalize_feature(feature) {
+    "bluetooth" | "hid" | "serial" | "usb" =>
+      self_and_origins(feature, trusted_origins)
+    "clipboard-write" | "fullscreen" | "web-share" => self_only(feature)
+    _ => deny(feature)
+  }
+}
+
+///|
+fn profile_marks_sensitive(
+  profile : BaselineProfile,
+  spec : FeatureSpec,
+) -> Bool {
+  match profile {
+    ProfileStrict => true
+    ProfileBalanced => spec.risk != RiskLow
+    ProfileMediaApp => spec.risk != RiskLow
+    ProfileDeviceLab => spec.risk != RiskLow
+  }
+}
+
+///|
+fn profile_requires_cross_site_guard(
+  profile : BaselineProfile,
+  feature : String,
+) -> Bool {
+  match profile {
+    ProfileStrict => true
+    ProfileBalanced =>
+      match known_feature(feature) {
+        Some(spec) => spec.risk != RiskLow || intent_disables(spec.recommended)
+        None => true
+      }
+    ProfileMediaApp =>
+      match normalize_feature(feature) {
+        "autoplay"
+        | "encrypted-media"
+        | "fullscreen"
+        | "speaker-selection"
+        | "web-share" => false
+        _ => true
+      }
+    ProfileDeviceLab =>
+      match normalize_feature(feature) {
+        "bluetooth"
+        | "hid"
+        | "serial"
+        | "usb"
+        | "clipboard-write"
+        | "fullscreen"
+        | "web-share" => false
+        _ => true
+      }
+  }
+}
+
+///|
 fn intent_disables(intent : PolicyIntent) -> Bool {
   match intent {
     IntentDeny(_) => true
@@ -1145,6 +1620,54 @@ fn severity_label(severity : Severity) -> String {
     SeverityInfo => "info"
     SeverityWarning => "warning"
     SeverityHigh => "high"
+  }
+}
+
+///|
+fn joined_header_value(
+  headers : HeaderSet,
+  kind : HeaderKind,
+  separator : String,
+) -> String? {
+  let values : Array[String] = []
+  for line in headers.lines {
+    if line.kind == kind {
+      values.push(line.value)
+    }
+  }
+  if values.length() == 0 {
+    None
+  } else {
+    Some(values.join(separator))
+  }
+}
+
+///|
+fn prepend_warnings(policy : Policy, warnings : Array[ParseWarning]) -> Policy {
+  if warnings.length() == 0 {
+    return policy
+  }
+  let merged : Array[ParseWarning] = []
+  for warning in warnings {
+    merged.push(warning)
+  }
+  for warning in policy.warnings {
+    merged.push(warning)
+  }
+  { directives: policy.directives, warnings: merged }
+}
+
+///|
+fn normalize_header_name(value : String) -> String {
+  trim(value).to_lower()
+}
+
+///|
+fn classify_header_name(name : String) -> HeaderKind {
+  match normalize_header_name(name) {
+    "permissions-policy" => HeaderPermissionsPolicy
+    "feature-policy" => HeaderFeaturePolicy
+    _ => HeaderOther
   }
 }
 

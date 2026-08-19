@@ -207,3 +207,89 @@ test "summary counts common allowlist shapes" {
     true,
   )
 }
+
+///|
+test "built in profiles generate auditable headers" {
+  @test.assert_eq(@permscope.built_in_profiles().length(), 4)
+  let profile = @permscope.media_app_profile()
+  let header = @permscope.profile_header(profile, [])
+  @test.assert_eq(header.contains("camera=()"), true)
+  @test.assert_eq(header.contains("fullscreen=(self)"), true)
+  let policy = @permscope.parse(header)
+  let report = @permscope.audit(
+    policy,
+    @permscope.profile_baseline(profile, "https://app.example"),
+  )
+  @test.assert_eq(report.ok, true)
+}
+
+///|
+test "device lab profile scopes hardware to trusted origins" {
+  let profile = @permscope.device_lab_profile()
+  let header = @permscope.profile_header(profile, ["https://kit.example/"])
+  @test.assert_eq(header.contains("usb=(self \"https://kit.example\")"), true)
+  @test.assert_eq(
+    @permscope.render_profile(profile, ["https://kit.example"]).contains(
+      "profile=device-lab",
+    ),
+    true,
+  )
+}
+
+///|
+test "header block parser extracts modern permissions policy" {
+  let block = "HTTP/2 200\nPermissions-Policy: camera=(), fullscreen=(self)\nFeature-Policy: camera *\nX-Trace: ok"
+  let headers = @permscope.parse_header_block(block)
+  @test.assert_eq(headers.lines.length(), 3)
+  match @permscope.permissions_policy_header(headers) {
+    None => @test.assert_eq(true, false)
+    Some(value) => @test.assert_eq(value, "camera=(), fullscreen=(self)")
+  }
+  let audit = @permscope.audit_header_block(
+    block,
+    @permscope.default_baseline("https://app.example"),
+  )
+  @test.assert_eq(audit.used_legacy, false)
+  @test.assert_eq(
+    @permscope.render_header_audit(audit).contains(
+      "effective=permissions-policy",
+    ),
+    true,
+  )
+}
+
+///|
+test "header audit falls back to legacy feature policy migration" {
+  let block = "Feature-Policy: camera 'none'; fullscreen 'self' https://video.example"
+  let audit = @permscope.audit_header_block(
+    block,
+    @permscope.default_baseline("https://app.example"),
+  )
+  @test.assert_eq(audit.used_legacy, true)
+  @test.assert_eq(
+    audit.migration,
+    "camera=(), fullscreen=(self \"https://video.example\")",
+  )
+}
+
+///|
+test "access matrix explains feature behavior across origins" {
+  let policy = @permscope.parse(
+    "camera=(), fullscreen=(self \"https://video.example\")",
+  )
+  let matrix = @permscope.access_matrix(
+    policy,
+    ["camera", "fullscreen"],
+    "https://app.example",
+    ["https://app.example/", "https://video.example"],
+  )
+  @test.assert_eq(matrix.cells.length(), 4)
+  match @permscope.matrix_cell(matrix, "FULLSCREEN", "https://video.example/") {
+    None => @test.assert_eq(true, false)
+    Some(cell) => @test.assert_eq(cell.allowed, true)
+  }
+  @test.assert_eq(
+    @permscope.render_access_matrix(matrix).contains("camera deny deny"),
+    true,
+  )
+}
