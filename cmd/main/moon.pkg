@@ -1,5 +1,5 @@
-// import {
-//   "LMK-ai-nb/permscope" @lib,
-// }
+import {
+  "LMK-ai-nb/permscope",
+}
 
 pkgtype(kind: "executable")
