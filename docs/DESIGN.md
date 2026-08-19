@@ -14,6 +14,9 @@ browser runtime, or framework adapter.
 - `AllowToken` represents `self`, `*`, and explicit origins.
 - `Baseline` describes project-specific security expectations.
 - `AuditReport` stores findings that can be rendered in CI logs.
+- `PolicyIntent` lets users generate strict headers from declarative feature
+  rules.
+- `PolicyDiff` records feature-level changes between two parsed policies.
 
 ## Parsing Strategy
 
@@ -29,6 +32,14 @@ serial, HID, and Bluetooth as features that should be explicitly denied unless a
 project opts into a different baseline. Wildcard access to sensitive features is
 reported as high severity. Plain HTTP origins are reported as warnings except
 for localhost development origins.
+
+## Build and Diff Strategy
+
+The builder deliberately exposes a small intent vocabulary: deny, self-only,
+all-origins, and self-plus-origins. This keeps generated headers stable and easy
+to review. The diff function compares normalized directive text and classifies
+changes as added, removed, changed, loosened, or tightened based on allowlist
+power.
 
 ## Non-Goals
 

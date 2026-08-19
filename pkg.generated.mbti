@@ -1,0 +1,118 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "LMK-ai-nb/permscope"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn all_origins(String) -> PolicyIntent
+
+pub fn allows(Policy, String, String, String) -> Bool
+
+pub fn audit(Policy, Baseline) -> AuditReport
+
+pub fn build(Array[PolicyIntent]) -> String
+
+pub fn build_policy(Array[PolicyIntent]) -> Policy
+
+pub fn default_baseline(String) -> Baseline
+
+pub fn deny(String) -> PolicyIntent
+
+pub fn diff(Policy, Policy) -> Array[PolicyDiff]
+
+pub fn directive(Policy, String) -> Directive?
+
+pub fn migrate_feature_policy(String) -> String
+
+pub fn parse(String) -> Policy
+
+pub fn parse_feature_policy(String) -> Policy
+
+pub fn render(Policy) -> String
+
+pub fn render_diffs(Array[PolicyDiff]) -> String
+
+pub fn render_report(AuditReport) -> String
+
+pub fn self_and_origins(String, Array[String]) -> PolicyIntent
+
+pub fn self_only(String) -> PolicyIntent
+
+// Errors
+
+// Types and methods
+pub enum AllowToken {
+  TokenSelf
+  TokenAll
+  TokenOrigin(String)
+} derive(Eq, @debug.Debug)
+
+pub struct AuditReport {
+  ok : Bool
+  findings : Array[Finding]
+} derive(Eq, @debug.Debug)
+
+pub struct Baseline {
+  document_origin : String
+  sensitive_features : Array[String]
+  deny_by_default : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub enum DiffKind {
+  DiffAdded
+  DiffRemoved
+  DiffChanged
+  DiffLoosened
+  DiffTightened
+} derive(Eq, @debug.Debug)
+
+pub struct Directive {
+  feature : String
+  tokens : Array[AllowToken]
+  raw : String
+  index : Int
+} derive(Eq, @debug.Debug)
+
+pub struct Finding {
+  severity : Severity
+  code : String
+  feature : String?
+  message : String
+} derive(Eq, @debug.Debug)
+
+pub struct ParseWarning {
+  index : Int
+  message : String
+  text : String
+} derive(Eq, @debug.Debug)
+
+pub struct Policy {
+  directives : Array[Directive]
+  warnings : Array[ParseWarning]
+} derive(Eq, @debug.Debug)
+
+pub struct PolicyDiff {
+  kind : DiffKind
+  feature : String
+  before : String?
+  after : String?
+} derive(Eq, @debug.Debug)
+
+pub enum PolicyIntent {
+  IntentDeny(String)
+  IntentSelf(String)
+  IntentAll(String)
+  IntentOrigins(String, Array[String])
+} derive(Eq, @debug.Debug)
+
+pub enum Severity {
+  SeverityInfo
+  SeverityWarning
+  SeverityHigh
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits

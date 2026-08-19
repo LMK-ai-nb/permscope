@@ -9,6 +9,7 @@ moon fmt --check
 moon check --deny-warn
 moon build
 moon test --deny-warn
+moon info
 moon run cmd/main
 ```
 
@@ -20,4 +21,6 @@ Coverage focus:
 - `self`, `*`, empty list, and explicit origin allowlist behavior.
 - Default sensitive-feature audit baseline.
 - High-severity wildcard risk detection.
+- Declarative policy builder output.
+- Feature-level policy diff rendering.
 - Internal feature and origin normalization helpers.

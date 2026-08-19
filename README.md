@@ -26,6 +26,8 @@ Initial August Hackathon version by 李明坤.
   origin.
 - Audit high-risk capabilities such as camera, microphone, geolocation, payment,
   USB, serial, HID, and Bluetooth.
+- Build strict headers from declarative policy intents.
+- Compare two policies and classify loosened or tightened changes.
 - Render stable text reports for CI logs or command-line tools.
 
 ## Quick Start
@@ -84,6 +86,9 @@ permscope: pass
   baseline.
 - `audit(policy, baseline)` reports risky wildcards, missing denies, parse
   warnings, and insecure origins.
+- `deny`, `self_only`, `all_origins`, `self_and_origins`, and `build` create
+  normalized headers from code.
+- `diff` and `render_diffs` show feature-level policy changes.
 - `render(policy)` and `render_report(report)` produce stable text output.
 
 ## Development
@@ -93,10 +98,12 @@ moon fmt --check
 moon check --deny-warn
 moon build
 moon test --deny-warn
+moon info
 moon run cmd/main
 ```
 
 The GitHub Actions workflow runs the same checks on every push and pull request.
+Generated `pkg.generated.mbti` files document the public MoonBit API.
 
 ## Project Boundary
 

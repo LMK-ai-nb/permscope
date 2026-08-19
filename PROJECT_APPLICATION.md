@@ -17,7 +17,7 @@
 
 ## 本次计划开发内容
 
-本次黑客松计划完成一个可复用的基础版本：解析现代 `Permissions-Policy` 语法，兼容旧版 `Feature-Policy` 迁移，支持 `self`、`*`、空 allowlist 和显式 origin 判断，提供默认安全基线，并输出适合 CI 日志使用的审计报告。
+本次黑客松计划完成一个可复用的基础版本：解析现代 `Permissions-Policy` 语法，兼容旧版 `Feature-Policy` 迁移，支持 `self`、`*`、空 allowlist 和显式 origin 判断，提供默认安全基线，并输出适合 CI 日志使用的审计报告。同时提供声明式 header 构建器和策略 diff 能力，帮助开发者在代码评审或 CI 中发现策略变宽、变窄或被删除的变化。
 
 ## 技术路线
 
@@ -25,7 +25,7 @@
 
 ## 预期功能、测试和文档
 
-预期功能包括：现代 header 解析、旧版 header 迁移、allowlist 规范化、敏感能力审计、风险分级、稳定文本渲染和可运行 demo。测试覆盖解析、重复 directive、错误格式、origin 判断、默认基线、通配符风险和旧版迁移。文档包括 README、设计说明、测试记录、更新日志和查重说明。
+预期功能包括：现代 header 解析、旧版 header 迁移、allowlist 规范化、敏感能力审计、风险分级、声明式 header 构建、策略 diff、稳定文本渲染和可运行 demo。测试覆盖解析、重复 directive、错误格式、origin 判断、默认基线、通配符风险、旧版迁移、构建器和策略比较。文档包括 README、设计说明、测试记录、更新日志和查重说明。
 
 ## 后续维护价值
 

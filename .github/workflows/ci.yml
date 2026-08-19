@@ -39,5 +39,8 @@ jobs:
       - name: Test
         run: moon test --deny-warn
 
+      - name: Interface info
+        run: moon info
+
       - name: Run example
         run: moon run cmd/main

@@ -7,4 +7,5 @@
 - Add modern `Permissions-Policy` parsing and rendering.
 - Add legacy `Feature-Policy` migration.
 - Add allowlist evaluation and baseline audit reports.
+- Add declarative policy builder and feature-level diff reports.
 - Add tests, runnable demo, CI, README, design notes, and project application.
