@@ -63,6 +63,62 @@ pub struct AuditReport {
 } derive(Eq, @debug.Debug)
 
 ///|
+/// One mutable builder operation is represented as a value so callers can keep
+/// configuration declarative.
+pub enum PolicyIntent {
+  IntentDeny(String)
+  IntentSelf(String)
+  IntentAll(String)
+  IntentOrigins(String, Array[String])
+} derive(Eq, @debug.Debug)
+
+///|
+/// Difference severity between two policies.
+pub enum DiffKind {
+  DiffAdded
+  DiffRemoved
+  DiffChanged
+  DiffLoosened
+  DiffTightened
+} derive(Eq, @debug.Debug)
+
+///|
+/// One feature-level policy difference.
+pub struct PolicyDiff {
+  kind : DiffKind
+  feature : String
+  before : String?
+  after : String?
+} derive(Eq, @debug.Debug)
+
+///|
+/// Create an intent that disables a feature.
+pub fn deny(feature : String) -> PolicyIntent {
+  IntentDeny(feature)
+}
+
+///|
+/// Create an intent that allows a feature only for the document origin.
+pub fn self_only(feature : String) -> PolicyIntent {
+  IntentSelf(feature)
+}
+
+///|
+/// Create an intent that allows a feature for every origin.
+pub fn all_origins(feature : String) -> PolicyIntent {
+  IntentAll(feature)
+}
+
+///|
+/// Create an intent that allows a feature for self plus explicit origins.
+pub fn self_and_origins(
+  feature : String,
+  origins : Array[String],
+) -> PolicyIntent {
+  IntentOrigins(feature, origins)
+}
+
+///|
 /// Parse a modern `Permissions-Policy` header.
 pub fn parse(header : String) -> Policy {
   let directives : Array[Directive] = []
@@ -248,6 +304,93 @@ pub fn audit(policy : Policy, baseline : Baseline) -> AuditReport {
     })
   }
   { ok: !has_high(findings), findings }
+}
+
+///|
+/// Build a modern header from declarative feature intents.
+pub fn build(intents : Array[PolicyIntent]) -> String {
+  let policy = build_policy(intents)
+  render(policy)
+}
+
+///|
+/// Build a policy from declarative feature intents.
+pub fn build_policy(intents : Array[PolicyIntent]) -> Policy {
+  let directives : Array[Directive] = []
+  let warnings : Array[ParseWarning] = []
+  let mut index = 0
+  for intent in intents {
+    index = index + 1
+    let directive = directive_from_intent(intent, index)
+    if has_feature(directives, directive.feature) {
+      warnings.push({
+        index,
+        message: "duplicate builder intent for feature: " + directive.feature,
+        text: render_directive(directive),
+      })
+    }
+    directives.push(directive)
+  }
+  { directives, warnings }
+}
+
+///|
+/// Compare two policies feature by feature.
+pub fn diff(before : Policy, after : Policy) -> Array[PolicyDiff] {
+  let diffs : Array[PolicyDiff] = []
+  for before_directive in before.directives {
+    match directive(after, before_directive.feature) {
+      None =>
+        diffs.push({
+          kind: DiffRemoved,
+          feature: before_directive.feature,
+          before: Some(render_directive(before_directive)),
+          after: None,
+        })
+      Some(after_directive) =>
+        if render_directive(before_directive) !=
+          render_directive(after_directive) {
+          diffs.push({
+            kind: classify_diff(before_directive, after_directive),
+            feature: before_directive.feature,
+            before: Some(render_directive(before_directive)),
+            after: Some(render_directive(after_directive)),
+          })
+        }
+    }
+  }
+  for after_directive in after.directives {
+    if directive(before, after_directive.feature) is None {
+      diffs.push({
+        kind: DiffAdded,
+        feature: after_directive.feature,
+        before: None,
+        after: Some(render_directive(after_directive)),
+      })
+    }
+  }
+  diffs
+}
+
+///|
+/// Render policy diffs as stable line-oriented text.
+pub fn render_diffs(diffs : Array[PolicyDiff]) -> String {
+  if diffs.length() == 0 {
+    return "permscope diff: no changes"
+  }
+  let lines : Array[String] = ["permscope diff:"]
+  for item in diffs {
+    lines.push(
+      diff_label(item.kind) +
+      " " +
+      item.feature +
+      " before=" +
+      item.before.unwrap_or("-") +
+      " after=" +
+      item.after.unwrap_or("-"),
+    )
+  }
+  lines.join("\n")
 }
 
 ///|
@@ -464,6 +607,73 @@ fn render_token(token : AllowToken) -> String {
     TokenAll => "*"
     TokenSelf => "self"
     TokenOrigin(origin) => "\"" + normalize_origin(origin) + "\""
+  }
+}
+
+///|
+fn directive_from_intent(intent : PolicyIntent, index : Int) -> Directive {
+  match intent {
+    IntentDeny(feature) =>
+      { feature: normalize_feature(feature), tokens: [], raw: "", index }
+    IntentSelf(feature) =>
+      {
+        feature: normalize_feature(feature),
+        tokens: [TokenSelf],
+        raw: "",
+        index,
+      }
+    IntentAll(feature) =>
+      {
+        feature: normalize_feature(feature),
+        tokens: [TokenAll],
+        raw: "",
+        index,
+      }
+    IntentOrigins(feature, origins) => {
+      let tokens : Array[AllowToken] = []
+      tokens.push(TokenSelf)
+      for origin in origins {
+        tokens.push(TokenOrigin(normalize_origin(origin)))
+      }
+      { feature: normalize_feature(feature), tokens, raw: "", index }
+    }
+  }
+}
+
+///|
+fn classify_diff(before : Directive, after : Directive) -> DiffKind {
+  let before_power = allow_power(before.tokens)
+  let after_power = allow_power(after.tokens)
+  if after_power > before_power {
+    DiffLoosened
+  } else if after_power < before_power {
+    DiffTightened
+  } else {
+    DiffChanged
+  }
+}
+
+///|
+fn allow_power(tokens : Array[AllowToken]) -> Int {
+  let mut score = tokens.length()
+  for token in tokens {
+    match token {
+      TokenAll => return 10000
+      TokenSelf => score = score + 10
+      TokenOrigin(_) => score = score + 20
+    }
+  }
+  score
+}
+
+///|
+fn diff_label(kind : DiffKind) -> String {
+  match kind {
+    DiffAdded => "added"
+    DiffRemoved => "removed"
+    DiffChanged => "changed"
+    DiffLoosened => "loosened"
+    DiffTightened => "tightened"
   }
 }
 

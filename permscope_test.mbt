@@ -122,3 +122,46 @@ test "render creates stable normalized header" {
     "fullscreen=(self \"https://video.example\")",
   )
 }
+
+///|
+test "build creates policy from declarative intents" {
+  let header = @permscope.build([
+    @permscope.deny("camera"),
+    @permscope.self_only("fullscreen"),
+    @permscope.self_and_origins("payment", ["HTTPS://PAY.EXAMPLE/"]),
+  ])
+  @test.assert_eq(
+    header, "camera=(), fullscreen=(self), payment=(self \"https://pay.example\")",
+  )
+}
+
+///|
+test "build policy records duplicate feature intent warnings" {
+  let policy = @permscope.build_policy([
+    @permscope.deny("camera"),
+    @permscope.all_origins("camera"),
+  ])
+  @test.assert_eq(policy.directives.length(), 2)
+  @test.assert_eq(policy.warnings.length(), 1)
+}
+
+///|
+test "diff classifies looser and tighter policy changes" {
+  let before = @permscope.parse("camera=(), fullscreen=(*)")
+  let after = @permscope.parse("camera=(self), fullscreen=(self)")
+  let diffs = @permscope.diff(before, after)
+  @test.assert_eq(diffs.length(), 2)
+  @test.assert_eq(
+    @permscope.render_diffs(diffs),
+    "permscope diff:\nloosened camera before=camera=() after=camera=(self)\ntightened fullscreen before=fullscreen=(*) after=fullscreen=(self)",
+  )
+}
+
+///|
+test "render diffs emits stable no change message" {
+  let policy = @permscope.parse("camera=()")
+  @test.assert_eq(
+    @permscope.render_diffs(@permscope.diff(policy, policy)),
+    "permscope diff: no changes",
+  )
+}
