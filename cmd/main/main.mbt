@@ -1,13 +1,24 @@
 ///|
 fn main {
-  let header = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), fullscreen=(self \"https://video.example\")"
+  let header = @permscope.recommended_header()
   let policy = @permscope.parse(header)
   let report = @permscope.audit(
     policy,
-    @permscope.default_baseline("https://app.example"),
+    @permscope.catalog_baseline("https://app.example"),
+  )
+  let summary = @permscope.summarize(
+    policy,
+    @permscope.catalog_baseline("https://app.example"),
+  )
+  let relaxed = @permscope.parse(
+    @permscope.build([
+      @permscope.all_origins("camera"),
+      @permscope.self_only("fullscreen"),
+    ]),
   )
   println("permscope demo")
   println("normalized=" + @permscope.render(policy))
+  println(@permscope.render_summary(summary))
   println(
     "fullscreen self=" +
     @permscope.allows(
@@ -33,4 +44,5 @@ fn main {
       "camera 'none'; fullscreen 'self' https://video.example",
     ),
   )
+  println(@permscope.render_diffs(@permscope.diff(policy, relaxed)))
 }

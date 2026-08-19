@@ -22,5 +22,8 @@ Coverage focus:
 - Default sensitive-feature audit baseline.
 - High-severity wildcard risk detection.
 - Declarative policy builder output.
+- Built-in feature catalog lookup.
+- Recommended header audit behavior.
+- Policy summary counts.
 - Feature-level policy diff rendering.
 - Internal feature and origin normalization helpers.

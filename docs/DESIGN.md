@@ -17,6 +17,8 @@ browser runtime, or framework adapter.
 - `PolicyIntent` lets users generate strict headers from declarative feature
   rules.
 - `PolicyDiff` records feature-level changes between two parsed policies.
+- `FeatureSpec` stores the built-in browser capability catalog.
+- `PolicySummary` keeps count-style output for dashboards and release notes.
 
 ## Parsing Strategy
 
@@ -41,9 +43,15 @@ to review. The diff function compares normalized directive text and classifies
 changes as added, removed, changed, loosened, or tightened based on allowlist
 power.
 
+## Catalog Strategy
+
+The built-in feature catalog is intentionally small but useful. It covers
+commonly delegated browser capabilities and marks high-risk device, media,
+sensor, identity, and payment features. The catalog powers recommended headers,
+catalog-derived baselines, and summary reports.
+
 ## Non-Goals
 
 - No network scanning.
 - No web server middleware in the initial version.
-- No bundled browser feature database.
 - No third-party code or generated fixture corpus.

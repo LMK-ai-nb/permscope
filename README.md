@@ -27,7 +27,10 @@ Initial August Hackathon version by 李明坤.
 - Audit high-risk capabilities such as camera, microphone, geolocation, payment,
   USB, serial, HID, and Bluetooth.
 - Build strict headers from declarative policy intents.
+- Use a built-in browser capability catalog to create recommended policies.
 - Compare two policies and classify loosened or tightened changes.
+- Summarize how many features are disabled, self-only, wildcard, or delegated to
+  explicit origins.
 - Render stable text reports for CI logs or command-line tools.
 
 ## Quick Start
@@ -88,6 +91,9 @@ permscope: pass
   warnings, and insecure origins.
 - `deny`, `self_only`, `all_origins`, `self_and_origins`, and `build` create
   normalized headers from code.
+- `known_features`, `known_feature`, `recommended_header`, and
+  `catalog_baseline` provide a practical browser capability catalog.
+- `summarize` and `render_summary` produce compact dashboard-friendly counts.
 - `diff` and `render_diffs` show feature-level policy changes.
 - `render(policy)` and `render_report(report)` produce stable text output.
 

@@ -16,6 +16,8 @@ pub fn build(Array[PolicyIntent]) -> String
 
 pub fn build_policy(Array[PolicyIntent]) -> Policy
 
+pub fn catalog_baseline(String) -> Baseline
+
 pub fn default_baseline(String) -> Baseline
 
 pub fn deny(String) -> PolicyIntent
@@ -24,11 +26,19 @@ pub fn diff(Policy, Policy) -> Array[PolicyDiff]
 
 pub fn directive(Policy, String) -> Directive?
 
+pub fn known_feature(String) -> FeatureSpec?
+
+pub fn known_feature_names() -> Array[String]
+
+pub fn known_features() -> Array[FeatureSpec]
+
 pub fn migrate_feature_policy(String) -> String
 
 pub fn parse(String) -> Policy
 
 pub fn parse_feature_policy(String) -> Policy
+
+pub fn recommended_header() -> String
 
 pub fn render(Policy) -> String
 
@@ -36,9 +46,13 @@ pub fn render_diffs(Array[PolicyDiff]) -> String
 
 pub fn render_report(AuditReport) -> String
 
+pub fn render_summary(PolicySummary) -> String
+
 pub fn self_and_origins(String, Array[String]) -> PolicyIntent
 
 pub fn self_only(String) -> PolicyIntent
+
+pub fn summarize(Policy, Baseline) -> PolicySummary
 
 // Errors
 
@@ -75,6 +89,26 @@ pub struct Directive {
   index : Int
 } derive(Eq, @debug.Debug)
 
+pub enum FeatureCategory {
+  CategorySensors
+  CategoryMedia
+  CategoryDevice
+  CategoryIdentity
+  CategoryPayment
+  CategoryDisplay
+  CategoryStorage
+  CategoryExperimental
+  CategoryOther
+} derive(Eq, @debug.Debug)
+
+pub struct FeatureSpec {
+  feature : String
+  category : FeatureCategory
+  risk : RiskLevel
+  recommended : PolicyIntent
+  rationale : String
+} derive(Eq, @debug.Debug)
+
 pub struct Finding {
   severity : Severity
   code : String
@@ -105,6 +139,20 @@ pub enum PolicyIntent {
   IntentSelf(String)
   IntentAll(String)
   IntentOrigins(String, Array[String])
+} derive(Eq, @debug.Debug)
+
+pub struct PolicySummary {
+  disabled : Int
+  self_only : Int
+  wildcard : Int
+  explicit_origins : Int
+  missing_sensitive : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub enum RiskLevel {
+  RiskLow
+  RiskMedium
+  RiskHigh
 } derive(Eq, @debug.Debug)
 
 pub enum Severity {
