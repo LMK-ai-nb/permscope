@@ -19,16 +19,15 @@ results.
 
 Related but different findings:
 
-- `moonview` mentions permission handling for an application runtime, but it is
-  not a standalone HTTP `Permissions-Policy` header parser and auditor.
-- PDF and application-manifest packages may use the word `permission`, but they
-  are unrelated to browser `Permissions-Policy` response headers.
+- Some public results mention application runtime permissions, PDF permissions,
+  or manifest permissions, but they are unrelated to browser
+  `Permissions-Policy` response headers.
 
 ## Abandoned Topic
 
-The earlier `robots.txt` direction should not be submitted. A public mooncakes.io
-package named `cauchyQ/moonbit-robots` already covers a robots.txt parser and
-crawler access decision library, which creates obvious topic-collision risk.
+The earlier `robots.txt` direction should not be submitted. Public mooncakes.io
+search results already show a MoonBit package covering robots.txt parsing and
+crawler access decisions, which creates obvious topic-collision risk.
 
 ## Differentiation
 
