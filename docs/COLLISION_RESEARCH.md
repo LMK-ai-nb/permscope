@@ -23,12 +23,6 @@ Related but different findings:
   or manifest permissions, but they are unrelated to browser
   `Permissions-Policy` response headers.
 
-## Abandoned Topic
-
-The earlier `robots.txt` direction should not be submitted. Public mooncakes.io
-search results already show a MoonBit package covering robots.txt parsing and
-crawler access decisions, which creates obvious topic-collision risk.
-
 ## Differentiation
 
 `permscope` is narrowly scoped around browser capability exposure through the
