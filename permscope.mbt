@@ -31,6 +31,38 @@ pub struct Policy {
 } derive(Eq, @debug.Debug)
 
 ///|
+/// Audit severity used by reports and CI output.
+pub enum Severity {
+  SeverityInfo
+  SeverityWarning
+  SeverityHigh
+} derive(Eq, @debug.Debug)
+
+///|
+/// One policy audit finding.
+pub struct Finding {
+  severity : Severity
+  code : String
+  feature : String?
+  message : String
+} derive(Eq, @debug.Debug)
+
+///|
+/// Project-specific security expectations.
+pub struct Baseline {
+  document_origin : String
+  sensitive_features : Array[String]
+  deny_by_default : Array[String]
+} derive(Eq, @debug.Debug)
+
+///|
+/// Result of auditing a parsed policy against a baseline.
+pub struct AuditReport {
+  ok : Bool
+  findings : Array[Finding]
+} derive(Eq, @debug.Debug)
+
+///|
 /// Parse a modern `Permissions-Policy` header.
 pub fn parse(header : String) -> Policy {
   let directives : Array[Directive] = []
@@ -148,6 +180,107 @@ pub fn render(policy : Policy) -> String {
     parts.push(render_directive(d))
   }
   parts.join(", ")
+}
+
+///|
+/// Recommended baseline for public web applications.
+pub fn default_baseline(document_origin : String) -> Baseline {
+  {
+    document_origin,
+    sensitive_features: [
+      "accelerometer", "ambient-light-sensor", "autoplay", "bluetooth", "browsing-topics",
+      "camera", "clipboard-read", "clipboard-write", "display-capture", "encrypted-media",
+      "fullscreen", "gamepad", "geolocation", "gyroscope", "hid", "idle-detection",
+      "local-fonts", "magnetometer", "microphone", "midi", "payment", "publickey-credentials-get",
+      "serial", "usb", "xr-spatial-tracking",
+    ],
+    deny_by_default: [
+      "bluetooth", "camera", "geolocation", "hid", "microphone", "payment", "serial",
+      "usb",
+    ],
+  }
+}
+
+///|
+/// Audit a parsed policy for risky defaults and overly broad allowlists.
+pub fn audit(policy : Policy, baseline : Baseline) -> AuditReport {
+  let findings : Array[Finding] = []
+  if policy.directives.length() == 0 {
+    findings.push({
+      severity: SeverityHigh,
+      code: "missing-header",
+      feature: None,
+      message: "no Permissions-Policy directive is present",
+    })
+  }
+  for warning in policy.warnings {
+    findings.push({
+      severity: SeverityWarning,
+      code: "parse-warning",
+      feature: None,
+      message: "segment " + warning.index.to_string() + ": " + warning.message,
+    })
+  }
+  for directive in policy.directives {
+    audit_directive(directive, baseline, findings)
+  }
+  for feature in baseline.deny_by_default {
+    if allows(
+        policy,
+        feature,
+        baseline.document_origin,
+        "https://cross-site.invalid",
+      ) {
+      findings.push({
+        severity: SeverityHigh,
+        code: "not-denied-by-default",
+        feature: Some(feature),
+        message: "sensitive feature is not explicitly blocked for cross-site contexts",
+      })
+    }
+  }
+  if findings.length() == 0 {
+    findings.push({
+      severity: SeverityInfo,
+      code: "baseline-satisfied",
+      feature: None,
+      message: "policy satisfies the selected baseline",
+    })
+  }
+  { ok: !has_high(findings), findings }
+}
+
+///|
+/// Convert legacy `Feature-Policy` syntax into modern `Permissions-Policy`.
+pub fn migrate_feature_policy(header : String) -> String {
+  render(parse_feature_policy(header))
+}
+
+///|
+/// Render an audit report as line-oriented text for examples and CI logs.
+pub fn render_report(report : AuditReport) -> String {
+  let lines : Array[String] = []
+  if report.ok {
+    lines.push("permscope: pass")
+  } else {
+    lines.push("permscope: fail")
+  }
+  for finding in report.findings {
+    let feature = match finding.feature {
+      None => "-"
+      Some(value) => value
+    }
+    lines.push(
+      severity_label(finding.severity) +
+      " " +
+      finding.code +
+      " " +
+      feature +
+      " - " +
+      finding.message,
+    )
+  }
+  lines.join("\n")
 }
 
 ///|
@@ -331,6 +464,93 @@ fn render_token(token : AllowToken) -> String {
     TokenAll => "*"
     TokenSelf => "self"
     TokenOrigin(origin) => "\"" + normalize_origin(origin) + "\""
+  }
+}
+
+///|
+fn audit_directive(
+  directive : Directive,
+  baseline : Baseline,
+  findings : Array[Finding],
+) -> Unit {
+  if directive.tokens.length() == 0 {
+    findings.push({
+      severity: SeverityInfo,
+      code: "feature-disabled",
+      feature: Some(directive.feature),
+      message: "feature is explicitly disabled",
+    })
+    return
+  }
+  if feature_in(baseline.sensitive_features, directive.feature) &&
+    has_wildcard(directive.tokens) {
+    findings.push({
+      severity: SeverityHigh,
+      code: "sensitive-wildcard",
+      feature: Some(directive.feature),
+      message: "sensitive browser capability is allowed for every origin",
+    })
+  }
+  for token in directive.tokens {
+    match token {
+      TokenOrigin(origin) =>
+        if insecure_external_origin(origin) {
+          findings.push({
+            severity: SeverityWarning,
+            code: "insecure-origin",
+            feature: Some(directive.feature),
+            message: "allowlist origin should use HTTPS unless it is localhost",
+          })
+        }
+      _ => ()
+    }
+  }
+}
+
+///|
+fn has_wildcard(tokens : Array[AllowToken]) -> Bool {
+  for token in tokens {
+    if token == TokenAll {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn has_high(findings : Array[Finding]) -> Bool {
+  for finding in findings {
+    if finding.severity == SeverityHigh {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn feature_in(features : Array[String], feature : String) -> Bool {
+  for candidate in features {
+    if normalize_feature(candidate) == feature {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn insecure_external_origin(origin : String) -> Bool {
+  let clean = normalize_origin(origin)
+  clean.has_prefix("http://") &&
+  !clean.has_prefix("http://localhost") &&
+  !clean.has_prefix("http://127.0.0.1")
+}
+
+///|
+fn severity_label(severity : Severity) -> String {
+  match severity {
+    SeverityInfo => "info"
+    SeverityWarning => "warning"
+    SeverityHigh => "high"
   }
 }
 
