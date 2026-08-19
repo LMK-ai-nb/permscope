@@ -92,6 +92,48 @@ pub struct PolicyDiff {
 } derive(Eq, @debug.Debug)
 
 ///|
+/// Browser capability category used by the built-in feature catalog.
+pub enum FeatureCategory {
+  CategorySensors
+  CategoryMedia
+  CategoryDevice
+  CategoryIdentity
+  CategoryPayment
+  CategoryDisplay
+  CategoryStorage
+  CategoryExperimental
+  CategoryOther
+} derive(Eq, @debug.Debug)
+
+///|
+/// Approximate risk tier for a browser capability.
+pub enum RiskLevel {
+  RiskLow
+  RiskMedium
+  RiskHigh
+} derive(Eq, @debug.Debug)
+
+///|
+/// Metadata for a known Permissions-Policy feature.
+pub struct FeatureSpec {
+  feature : String
+  category : FeatureCategory
+  risk : RiskLevel
+  recommended : PolicyIntent
+  rationale : String
+} derive(Eq, @debug.Debug)
+
+///|
+/// Compact policy summary for dashboards and release notes.
+pub struct PolicySummary {
+  disabled : Int
+  self_only : Int
+  wildcard : Int
+  explicit_origins : Int
+  missing_sensitive : Array[String]
+} derive(Eq, @debug.Debug)
+
+///|
 /// Create an intent that disables a feature.
 pub fn deny(feature : String) -> PolicyIntent {
   IntentDeny(feature)
@@ -116,6 +158,300 @@ pub fn self_and_origins(
   origins : Array[String],
 ) -> PolicyIntent {
   IntentOrigins(feature, origins)
+}
+
+///|
+/// Return the built-in browser capability catalog.
+pub fn known_features() -> Array[FeatureSpec] {
+  [
+    feature_spec(
+      "accelerometer",
+      CategorySensors,
+      RiskMedium,
+      deny("accelerometer"),
+      "motion sensors can reveal device movement",
+    ),
+    feature_spec(
+      "ambient-light-sensor",
+      CategorySensors,
+      RiskMedium,
+      deny("ambient-light-sensor"),
+      "ambient sensors may expose user environment signals",
+    ),
+    feature_spec(
+      "autoplay",
+      CategoryMedia,
+      RiskLow,
+      self_only("autoplay"),
+      "same-origin autoplay is usually easier to control",
+    ),
+    feature_spec(
+      "bluetooth",
+      CategoryDevice,
+      RiskHigh,
+      deny("bluetooth"),
+      "device access should require explicit application review",
+    ),
+    feature_spec(
+      "browsing-topics",
+      CategoryExperimental,
+      RiskMedium,
+      deny("browsing-topics"),
+      "interest topics should be disabled unless advertising logic needs them",
+    ),
+    feature_spec(
+      "camera",
+      CategoryMedia,
+      RiskHigh,
+      deny("camera"),
+      "camera access is a high-risk user privacy capability",
+    ),
+    feature_spec(
+      "clipboard-read",
+      CategoryDevice,
+      RiskHigh,
+      deny("clipboard-read"),
+      "clipboard read access may expose sensitive user data",
+    ),
+    feature_spec(
+      "clipboard-write",
+      CategoryDevice,
+      RiskMedium,
+      self_only("clipboard-write"),
+      "same-origin clipboard writes are safer than broad delegation",
+    ),
+    feature_spec(
+      "display-capture",
+      CategoryMedia,
+      RiskHigh,
+      deny("display-capture"),
+      "screen capture should be explicitly reviewed",
+    ),
+    feature_spec(
+      "encrypted-media",
+      CategoryMedia,
+      RiskMedium,
+      self_only("encrypted-media"),
+      "DRM media access should be scoped to trusted origins",
+    ),
+    feature_spec(
+      "fullscreen",
+      CategoryDisplay,
+      RiskLow,
+      self_only("fullscreen"),
+      "fullscreen is normally acceptable for the document origin",
+    ),
+    feature_spec(
+      "gamepad",
+      CategoryDevice,
+      RiskMedium,
+      deny("gamepad"),
+      "gamepad access can reveal connected hardware state",
+    ),
+    feature_spec(
+      "geolocation",
+      CategorySensors,
+      RiskHigh,
+      deny("geolocation"),
+      "location access is high-risk and should be denied by default",
+    ),
+    feature_spec(
+      "gyroscope",
+      CategorySensors,
+      RiskMedium,
+      deny("gyroscope"),
+      "motion sensors should be opt-in",
+    ),
+    feature_spec(
+      "hid",
+      CategoryDevice,
+      RiskHigh,
+      deny("hid"),
+      "human-interface device access reaches local hardware",
+    ),
+    feature_spec(
+      "idle-detection",
+      CategoryIdentity,
+      RiskMedium,
+      deny("idle-detection"),
+      "idle signals can reveal user presence",
+    ),
+    feature_spec(
+      "local-fonts",
+      CategoryStorage,
+      RiskMedium,
+      deny("local-fonts"),
+      "local font enumeration may contribute to fingerprinting",
+    ),
+    feature_spec(
+      "magnetometer",
+      CategorySensors,
+      RiskMedium,
+      deny("magnetometer"),
+      "motion and compass sensors should be opt-in",
+    ),
+    feature_spec(
+      "microphone",
+      CategoryMedia,
+      RiskHigh,
+      deny("microphone"),
+      "microphone access is a high-risk user privacy capability",
+    ),
+    feature_spec(
+      "midi",
+      CategoryDevice,
+      RiskMedium,
+      deny("midi"),
+      "MIDI device access should not be delegated broadly",
+    ),
+    feature_spec(
+      "payment",
+      CategoryPayment,
+      RiskHigh,
+      deny("payment"),
+      "payment access should only be enabled after product review",
+    ),
+    feature_spec(
+      "publickey-credentials-get",
+      CategoryIdentity,
+      RiskHigh,
+      self_only("publickey-credentials-get"),
+      "passkey requests should stay on trusted document origins",
+    ),
+    feature_spec(
+      "serial",
+      CategoryDevice,
+      RiskHigh,
+      deny("serial"),
+      "serial ports expose local hardware resources",
+    ),
+    feature_spec(
+      "speaker-selection",
+      CategoryMedia,
+      RiskMedium,
+      self_only("speaker-selection"),
+      "output device selection should be scoped",
+    ),
+    feature_spec(
+      "storage-access",
+      CategoryStorage,
+      RiskMedium,
+      deny("storage-access"),
+      "cross-site storage access should be deliberate",
+    ),
+    feature_spec(
+      "usb",
+      CategoryDevice,
+      RiskHigh,
+      deny("usb"),
+      "USB access reaches local hardware and should be denied by default",
+    ),
+    feature_spec(
+      "web-share",
+      CategoryOther,
+      RiskLow,
+      self_only("web-share"),
+      "same-origin sharing keeps delegation predictable",
+    ),
+    feature_spec(
+      "window-management",
+      CategoryDisplay,
+      RiskMedium,
+      deny("window-management"),
+      "window placement should be opt-in for trusted apps",
+    ),
+    feature_spec(
+      "xr-spatial-tracking",
+      CategorySensors,
+      RiskHigh,
+      deny("xr-spatial-tracking"),
+      "XR tracking can reveal physical-space information",
+    ),
+  ]
+}
+
+///|
+/// Find metadata for one known feature.
+pub fn known_feature(feature : String) -> FeatureSpec? {
+  let wanted = normalize_feature(feature)
+  for spec in known_features() {
+    if spec.feature == wanted {
+      return Some(spec)
+    }
+  }
+  None
+}
+
+///|
+/// Return a normalized list of known feature names.
+pub fn known_feature_names() -> Array[String] {
+  let names : Array[String] = []
+  for spec in known_features() {
+    names.push(spec.feature)
+  }
+  names
+}
+
+///|
+/// Render the built-in recommended header.
+pub fn recommended_header() -> String {
+  build(recommended_intents())
+}
+
+///|
+/// Build a baseline from the feature catalog instead of a hard-coded list.
+pub fn catalog_baseline(document_origin : String) -> Baseline {
+  let sensitive_features : Array[String] = []
+  let deny_by_default : Array[String] = []
+  for spec in known_features() {
+    if spec.risk == RiskHigh {
+      sensitive_features.push(spec.feature)
+    }
+    if intent_disables(spec.recommended) {
+      deny_by_default.push(spec.feature)
+    }
+  }
+  { document_origin, sensitive_features, deny_by_default }
+}
+
+///|
+/// Summarize a policy against a baseline.
+pub fn summarize(policy : Policy, baseline : Baseline) -> PolicySummary {
+  let mut disabled = 0
+  let mut self_only = 0
+  let mut wildcard = 0
+  let mut explicit_origins = 0
+  let missing_sensitive : Array[String] = []
+  for item in policy.directives {
+    match directive_shape(item) {
+      "disabled" => disabled = disabled + 1
+      "self" => self_only = self_only + 1
+      "wildcard" => wildcard = wildcard + 1
+      "explicit" => explicit_origins = explicit_origins + 1
+      _ => ()
+    }
+  }
+  for feature in baseline.deny_by_default {
+    if directive(policy, feature) is None {
+      missing_sensitive.push(feature)
+    }
+  }
+  { disabled, self_only, wildcard, explicit_origins, missing_sensitive }
+}
+
+///|
+/// Render a compact summary for CLI output.
+pub fn render_summary(summary : PolicySummary) -> String {
+  "summary disabled=" +
+  summary.disabled.to_string() +
+  " self=" +
+  summary.self_only.to_string() +
+  " wildcard=" +
+  summary.wildcard.to_string() +
+  " explicit=" +
+  summary.explicit_origins.to_string() +
+  " missing_sensitive=" +
+  summary.missing_sensitive.join("|")
 }
 
 ///|
@@ -638,6 +974,54 @@ fn directive_from_intent(intent : PolicyIntent, index : Int) -> Directive {
       { feature: normalize_feature(feature), tokens, raw: "", index }
     }
   }
+}
+
+///|
+fn feature_spec(
+  feature : String,
+  category : FeatureCategory,
+  risk : RiskLevel,
+  recommended : PolicyIntent,
+  rationale : String,
+) -> FeatureSpec {
+  {
+    feature: normalize_feature(feature),
+    category,
+    risk,
+    recommended,
+    rationale,
+  }
+}
+
+///|
+fn recommended_intents() -> Array[PolicyIntent] {
+  let intents : Array[PolicyIntent] = []
+  for spec in known_features() {
+    intents.push(spec.recommended)
+  }
+  intents
+}
+
+///|
+fn intent_disables(intent : PolicyIntent) -> Bool {
+  match intent {
+    IntentDeny(_) => true
+    _ => false
+  }
+}
+
+///|
+fn directive_shape(directive : Directive) -> String {
+  if directive.tokens.length() == 0 {
+    return "disabled"
+  }
+  if has_wildcard(directive.tokens) {
+    return "wildcard"
+  }
+  if directive.tokens.length() == 1 && directive.tokens[0] == TokenSelf {
+    return "self"
+  }
+  "explicit"
 }
 
 ///|

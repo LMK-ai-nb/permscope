@@ -165,3 +165,45 @@ test "render diffs emits stable no change message" {
     "permscope diff: no changes",
   )
 }
+
+///|
+test "known feature catalog exposes high risk capabilities" {
+  @test.assert_eq(@permscope.known_features().length() >= 20, true)
+  match @permscope.known_feature("CAMERA") {
+    None => @test.assert_eq(true, false)
+    Some(spec) => {
+      @test.assert_eq(spec.feature, "camera")
+      @test.assert_eq(spec.recommended, @permscope.deny("camera"))
+    }
+  }
+}
+
+///|
+test "recommended header is parseable and audit safe" {
+  let policy = @permscope.parse(@permscope.recommended_header())
+  let report = @permscope.audit(
+    policy,
+    @permscope.catalog_baseline("https://app.example"),
+  )
+  @test.assert_eq(policy.warnings.length(), 0)
+  @test.assert_eq(report.ok, true)
+}
+
+///|
+test "summary counts common allowlist shapes" {
+  let policy = @permscope.parse(
+    "camera=(), fullscreen=(self), payment=(self \"https://pay.example\"), autoplay=(*)",
+  )
+  let summary = @permscope.summarize(
+    policy,
+    @permscope.catalog_baseline("https://app.example"),
+  )
+  @test.assert_eq(summary.disabled, 1)
+  @test.assert_eq(summary.self_only, 1)
+  @test.assert_eq(summary.explicit_origins, 1)
+  @test.assert_eq(summary.wildcard, 1)
+  @test.assert_eq(
+    @permscope.render_summary(summary).contains("missing_sensitive="),
+    true,
+  )
+}
