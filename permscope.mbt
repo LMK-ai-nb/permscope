@@ -393,7 +393,7 @@ fn parse_token_list(
   let tokens : Array[AllowToken] = []
   let mut saw_none = false
   for token_view in body.split(" ") {
-    let token = strip_quotes(trim(token_view.to_owned()))
+    let token = strip_quotes(trim(token_view.to_owned())).to_lower()
     if token == "" {
       continue
     }
