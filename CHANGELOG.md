@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+
+- Add route-level capability contracts for `Permissions-Policy` boundary checks.
+- Add minimal policy generation from declared browser capability needs.
+- Add contract audit findings for missing, overbroad, optional, and undeclared
+  origin delegation cases.
+- Clarify project differentiation from generic security-header scanners,
+  mooncakes publishing checkers, README provenance tools, robots.txt tools, and
+  contest review proof tools.
+
 ## 0.1.0
 
 - Start the `permscope` MoonBit project.

@@ -1,6 +1,6 @@
 name = "LMK-ai-nb/permscope"
 
-version = "0.1.0"
+version = "0.1.1"
 
 readme = "README.md"
 
@@ -12,10 +12,11 @@ keywords = [
   "moonbit",
   "permissions-policy",
   "security-headers",
+  "capability-contract",
   "web-security",
   "audit",
 ]
 
 preferred_target = "wasm"
 
-description = "Parse and audit Permissions-Policy HTTP response headers in MoonBit."
+description = "Audit Permissions-Policy browser capability boundaries in MoonBit."
