@@ -1,7 +1,9 @@
 # permscope
 
-MoonBit library for parsing and auditing HTTP security response headers, with a
-deep `Permissions-Policy` parser at its core.
+MoonBit library for browser capability boundary auditing, with a deep
+`Permissions-Policy` parser and route-level capability contracts at its core.
+Supporting checks for CSP, HSTS, referrer, clickjacking, MIME sniffing, and
+cross-origin isolation provide response-header context around that core.
 
 `permscope` helps small web tools, gateways, static-site checks, and CI scripts
 answer three questions:
@@ -11,6 +13,8 @@ answer three questions:
   serial, HID, or Bluetooth too permissive?
 - Can an old `Feature-Policy` header be migrated to modern
   `Permissions-Policy` syntax?
+- Does a route or component expose only the browser capabilities it declared in
+  its capability contract?
 - Do the response headers satisfy practical web security baselines for CSP,
   HSTS, referrer leakage, clickjacking, MIME sniffing, and cross-origin
   isolation?
@@ -39,6 +43,10 @@ Initial August Hackathon version by 李明坤.
 - Parse raw HTTP response header blocks copied from `curl -I` output.
 - Audit the effective policy from modern and legacy response headers.
 - Render feature/origin access matrices for documentation and reviews.
+- Define route-level capability contracts and audit missing, overbroad, or
+  undeclared `Permissions-Policy` delegations.
+- Generate the strictest `Permissions-Policy` header that satisfies a declared
+  capability contract.
 - Parse and audit core `Content-Security-Policy` directives.
 - Audit `Strict-Transport-Security`, `Referrer-Policy`,
   `X-Frame-Options`, `X-Content-Type-Options`, COOP, COEP, and CORP.
@@ -74,8 +82,29 @@ let report = @permscope.audit(
   policy,
   @permscope.default_baseline("https://app.example"),
 )
+let contract = @permscope.capability_contract(
+  "video-room",
+  "https://app.example",
+  [
+    @permscope.capability_need("camera", ["self"], "local preview"),
+    @permscope.capability_need(
+      "fullscreen",
+      ["self", "https://video.example"],
+      "embedded player",
+    ),
+  ],
+  true,
+)
+let contract_policy = @permscope.parse(
+  @permscope.minimal_policy_for_contract(contract),
+)
+let contract_report = @permscope.audit_capability_contract(
+  contract_policy,
+  contract,
+)
 println(can_use_camera.to_string())
 println(@permscope.render_report(report))
+println(@permscope.render_capability_contract_report(contract_report))
 ```
 
 Run the bundled demo:
@@ -91,6 +120,8 @@ permscope demo
 camera cross-site=false
 effective=permissions-policy
 permscope access matrix document=https://app.example
+permscope capability contract
+contract=video-room
 score 80/80 percent=100 grade=A
 permscope batch security audit
 permscope: pass
@@ -114,6 +145,10 @@ permscope: pass
   `catalog_baseline` provide a practical browser capability catalog.
 - `built_in_profiles`, `profile_header`, `profile_policy`, `profile_baseline`,
   and `render_profile` provide deployment-oriented policy presets.
+- `capability_contract`, `capability_need`, `optional_capability_need`,
+  `minimal_policy_for_contract`, `audit_capability_contract`, and
+  `render_capability_contract_report` provide scenario-level capability
+  boundary checks.
 - `summarize` and `render_summary` produce compact dashboard-friendly counts.
 - `parse_header_block`, `permissions_policy_header`, `feature_policy_header`,
   `policy_from_headers`, `audit_header_block`, and `render_header_audit` work
@@ -150,11 +185,18 @@ Generated `pkg.generated.mbti` files document the public MoonBit API.
 
 ## Project Boundary
 
-`permscope` is intentionally a policy library. It can parse response header
-text that a caller already has, but it does not make HTTP requests, start a web
-server, or depend on a browser runtime. Host applications can use it inside a
-gateway, static analysis tool, CI check, documentation generator, or web
-framework adapter.
+`permscope` is intentionally a browser capability policy library. It can parse
+response header text that a caller already has, but it does not make HTTP
+requests, start a web server, or depend on a browser runtime. Host applications
+can use it inside a gateway, static analysis tool, CI check, documentation
+generator, or web framework adapter.
+
+The project does not audit mooncakes.io publishing status, does not verify
+README example provenance, does not implement robots.txt policy, and is not a
+general contest review proof tool. Its core boundary is `Permissions-Policy`
+capability exposure: parsing, legacy migration, origin decisions, feature
+catalogs, access matrices, policy diffs, and capability contracts. Broader
+security-header scoring is supporting context for that capability workflow.
 
 ## License
 

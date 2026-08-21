@@ -28,6 +28,8 @@ Coverage focus:
 - Raw HTTP response header-block parsing and precedence.
 - Legacy header fallback migration from header blocks.
 - Feature/origin access matrix rendering.
+- Capability contract generation and auditing for missing, wildcard, optional,
+  and undeclared origin delegation cases.
 - Content-Security-Policy parsing, fallback, nonce/hash handling, and risk
   detection.
 - HSTS, Referrer-Policy, X-Frame-Options, X-Content-Type-Options, COOP, COEP,

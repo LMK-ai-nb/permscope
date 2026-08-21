@@ -48,6 +48,25 @@ fn main {
     "https://app.example",
     ["https://app.example", "https://video.example"],
   )
+  let contract = @permscope.capability_contract(
+    "video-room",
+    "https://app.example",
+    [
+      @permscope.capability_need("camera", ["self"], "local preview"),
+      @permscope.capability_need(
+        "fullscreen",
+        ["self", "https://video.example"],
+        "embedded player",
+      ),
+    ],
+    true,
+  )
+  let contract_policy = @permscope.parse(
+    @permscope.minimal_policy_for_contract(contract),
+  )
+  let contract_report = @permscope.audit_capability_contract(
+    contract_policy, contract,
+  )
   println("permscope demo")
   println("normalized=" + @permscope.render(policy))
   println(@permscope.render_summary(summary))
@@ -79,6 +98,7 @@ fn main {
   )
   println(@permscope.render_header_audit(header_audit))
   println(@permscope.render_access_matrix(matrix))
+  println(@permscope.render_capability_contract_report(contract_report))
   println(@permscope.render_security_score(security_audit.score))
   println(
     @permscope.render_security_finding_summary(

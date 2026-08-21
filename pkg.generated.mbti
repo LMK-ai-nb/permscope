@@ -18,6 +18,8 @@ pub fn app_csp_header(Array[String], Array[String]) -> String
 
 pub fn audit(Policy, Baseline) -> AuditReport
 
+pub fn audit_capability_contract(Policy, CapabilityContract) -> CapabilityContractReport
+
 pub fn audit_csp(CspPolicy) -> AuditReport
 
 pub fn audit_header_block(String, Baseline) -> HeaderAudit
@@ -51,6 +53,12 @@ pub fn build_policy(Array[PolicyIntent]) -> Policy
 pub fn built_in_profiles() -> Array[BaselineProfile]
 
 pub fn bundle_header_value(SecurityHeaderBundle, String) -> String?
+
+pub fn capability_contract(String, String, Array[CapabilityNeed], Bool) -> CapabilityContract
+
+pub fn capability_contract_features(CapabilityContract) -> Array[String]
+
+pub fn capability_need(String, Array[String], String) -> CapabilityNeed
 
 pub fn catalog_baseline(String) -> Baseline
 
@@ -112,7 +120,15 @@ pub fn media_security_bundle(String, Array[String], Array[String]) -> SecurityHe
 
 pub fn migrate_feature_policy(String) -> String
 
+pub fn minimal_policy_for_contract(CapabilityContract) -> String
+
+pub fn minimal_policy_intents(CapabilityContract) -> Array[PolicyIntent]
+
 pub fn named_security_bundle(String, String) -> SecurityHeaderBundle
+
+pub fn optional_capability_need(String, Array[String], String) -> CapabilityNeed
+
+pub fn origins_only(String, Array[String]) -> PolicyIntent
 
 pub fn parse(String) -> Policy
 
@@ -151,6 +167,8 @@ pub fn render_batch_json(BatchAudit) -> String
 pub fn render_batch_markdown(BatchAudit) -> String
 
 pub fn render_batch_recommendations(Array[BatchRecommendation]) -> String
+
+pub fn render_capability_contract_report(CapabilityContractReport) -> String
 
 pub fn render_csp(CspPolicy) -> String
 
@@ -311,6 +329,40 @@ pub struct BatchRecommendation {
   reason : String
 } derive(Eq, @debug.Debug)
 
+pub struct CapabilityContract {
+  name : String
+  document_origin : String
+  needs : Array[CapabilityNeed]
+  forbid_unspecified : Bool
+} derive(Eq, @debug.Debug)
+
+pub struct CapabilityContractReport {
+  contract : CapabilityContract
+  ok : Bool
+  findings : Array[CapabilityFinding]
+  allowed : Int
+  missing : Int
+  overbroad : Int
+  unexpected : Int
+} derive(Eq, @debug.Debug)
+
+pub struct CapabilityFinding {
+  severity : Severity
+  code : String
+  feature : String
+  target_origin : String
+  message : String
+} derive(Eq, @debug.Debug)
+
+pub struct CapabilityNeed {
+  feature : String
+  target_origins : Array[String]
+  reason : String
+  required : Bool
+} derive(Eq, @debug.Debug)
+
+type ContractCounters derive(Eq, @debug.Debug)
+
 pub struct CspDirective {
   name : String
   values : Array[String]
@@ -445,6 +497,7 @@ pub enum PolicyIntent {
   IntentSelf(String)
   IntentAll(String)
   IntentOrigins(String, Array[String])
+  IntentOriginsOnly(String, Array[String])
 } derive(Eq, @debug.Debug)
 
 pub struct PolicySummary {

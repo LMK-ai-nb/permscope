@@ -12,6 +12,8 @@
 - Add deployment profiles for strict, balanced, media-app, and device-lab use.
 - Add raw HTTP response header-block parsing and end-to-end header auditing.
 - Add feature/origin access matrix rendering for reviews and CI logs.
+- Add route-level capability contracts and minimal policy generation for
+  `Permissions-Policy` boundary checks.
 - Add CSP parsing, source-expression analysis, and CSP audit reports.
 - Add HSTS, Referrer-Policy, X-Frame-Options, X-Content-Type-Options, COOP,
   COEP, and CORP checks.

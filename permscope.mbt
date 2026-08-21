@@ -70,6 +70,7 @@ pub enum PolicyIntent {
   IntentSelf(String)
   IntentAll(String)
   IntentOrigins(String, Array[String])
+  IntentOriginsOnly(String, Array[String])
 } derive(Eq, @debug.Debug)
 
 ///|
@@ -220,6 +221,12 @@ pub fn self_and_origins(
   origins : Array[String],
 ) -> PolicyIntent {
   IntentOrigins(feature, origins)
+}
+
+///|
+/// Create an intent that allows a feature only for explicit origins.
+pub fn origins_only(feature : String, origins : Array[String]) -> PolicyIntent {
+  IntentOriginsOnly(feature, origins)
 }
 
 ///|
@@ -1352,6 +1359,13 @@ fn directive_from_intent(intent : PolicyIntent, index : Int) -> Directive {
     IntentOrigins(feature, origins) => {
       let tokens : Array[AllowToken] = []
       tokens.push(TokenSelf)
+      for origin in origins {
+        tokens.push(TokenOrigin(normalize_origin(origin)))
+      }
+      { feature: normalize_feature(feature), tokens, raw: "", index }
+    }
+    IntentOriginsOnly(feature, origins) => {
+      let tokens : Array[AllowToken] = []
       for origin in origins {
         tokens.push(TokenOrigin(normalize_origin(origin)))
       }

@@ -5,7 +5,10 @@
 `permscope` focuses on one reusable job: parse and audit HTTP security response
 headers without pulling in an HTTP server, browser runtime, or framework
 adapter. `Permissions-Policy` remains the deepest parser, while CSP and other
-headers provide a broader response-level security score.
+headers provide a broader response-level security score. The distinctive layer
+is capability-boundary governance: callers can declare which browser features a
+route or component needs, then check whether the policy is missing required
+access or delegates undeclared capabilities.
 
 ## Data Model
 
@@ -25,6 +28,8 @@ headers provide a broader response-level security score.
   blocks without adding a network client.
 - `AccessMatrix` records feature/origin decisions for documentation and review
   workflows.
+- `CapabilityNeed`, `CapabilityContract`, `CapabilityFinding`, and
+  `CapabilityContractReport` model route-level browser capability expectations.
 - `CspPolicy`, `CspDirective`, `CspSummary`, and `SourceExpression` represent a
   practical CSP subset.
 - `HeaderCheck`, `SecurityScore`, and `SecurityAudit` aggregate CSP,
@@ -102,6 +107,15 @@ The access matrix runs the same `allows` decision across selected features and
 origins. It is intentionally textual so a caller can paste the result into CI
 logs, release notes, or review comments without needing a UI dependency.
 
+## Capability Contract Strategy
+
+Capability contracts turn product or route expectations into explicit data:
+feature, target origins, reason, and whether the capability is required. The
+auditor compares those declarations with the parsed `Permissions-Policy`,
+detects blocked required capabilities, wildcard delegation, extra origins, and
+undeclared features left open by default. `minimal_policy_for_contract` can
+generate the strictest known-feature header that satisfies the declaration.
+
 ## Catalog Strategy
 
 The built-in feature catalog is intentionally small but useful. It covers
@@ -114,3 +128,5 @@ catalog-derived baselines, and summary reports.
 - No network scanning.
 - No web server middleware in the initial version.
 - No third-party code or generated fixture corpus.
+- No mooncakes.io publishing audit, README provenance audit, robots.txt policy,
+  or generic contest-review proof workflow.
