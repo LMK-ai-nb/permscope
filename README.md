@@ -1,7 +1,7 @@
 # permscope
 
-MoonBit library for parsing and auditing the `Permissions-Policy` HTTP response
-header.
+MoonBit library for parsing and auditing HTTP security response headers, with a
+deep `Permissions-Policy` parser at its core.
 
 `permscope` helps small web tools, gateways, static-site checks, and CI scripts
 answer three questions:
@@ -11,6 +11,9 @@ answer three questions:
   serial, HID, or Bluetooth too permissive?
 - Can an old `Feature-Policy` header be migrated to modern
   `Permissions-Policy` syntax?
+- Do the response headers satisfy practical web security baselines for CSP,
+  HSTS, referrer leakage, clickjacking, MIME sniffing, and cross-origin
+  isolation?
 
 ## Status
 
@@ -36,6 +39,13 @@ Initial August Hackathon version by 李明坤.
 - Parse raw HTTP response header blocks copied from `curl -I` output.
 - Audit the effective policy from modern and legacy response headers.
 - Render feature/origin access matrices for documentation and reviews.
+- Parse and audit core `Content-Security-Policy` directives.
+- Audit `Strict-Transport-Security`, `Referrer-Policy`,
+  `X-Frame-Options`, `X-Content-Type-Options`, COOP, COEP, and CORP.
+- Generate strict, static-site, API-service, media-app, and device-lab security
+  header bundles.
+- Score security headers with grades, finding summaries, recommendations, CI
+  gates, and batch reports across multiple routes.
 - Render stable text reports for CI logs or command-line tools.
 
 ## Quick Start
@@ -81,6 +91,8 @@ permscope demo
 camera cross-site=false
 effective=permissions-policy
 permscope access matrix document=https://app.example
+score 80/80 percent=100 grade=A
+permscope batch security audit
 permscope: pass
 ```
 
@@ -108,6 +120,17 @@ permscope: pass
   with raw HTTP response header blocks.
 - `access_matrix`, `matrix_cell`, and `render_access_matrix` explain whether
   selected features are allowed for selected origins.
+- `parse_csp`, `audit_csp`, `strict_csp_header`, and `app_csp_header` cover the
+  CSP subset used by common web applications.
+- `audit_security_header_block`, `render_security_audit`,
+  `render_security_markdown`, `render_security_json`,
+  `security_recommendations`, and `security_gate` provide full response-header
+  scoring and CI output.
+- `strict_security_bundle`, `static_site_security_bundle`,
+  `api_service_security_bundle`, `media_security_bundle`, and
+  `device_lab_security_bundle` generate reusable deployment presets.
+- `audit_response_samples`, `render_batch_audit`, `render_batch_markdown`,
+  `render_batch_json`, and `batch_security_gate` support multi-route checks.
 - `diff` and `render_diffs` show feature-level policy changes.
 - `render(policy)` and `render_report(report)` produce stable text output.
 

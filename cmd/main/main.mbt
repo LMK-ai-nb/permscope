@@ -18,11 +18,30 @@ fn main {
   )
   let header_block = "HTTP/2 200\nPermissions-Policy: " +
     header +
-    "\nX-Content-Type-Options: nosniff"
+    "\nContent-Security-Policy: " +
+    @permscope.strict_csp_header() +
+    "\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload" +
+    "\nReferrer-Policy: strict-origin-when-cross-origin" +
+    "\nX-Frame-Options: DENY" +
+    "\nX-Content-Type-Options: nosniff" +
+    "\nCross-Origin-Opener-Policy: same-origin" +
+    "\nCross-Origin-Embedder-Policy: require-corp" +
+    "\nCross-Origin-Resource-Policy: same-origin"
   let header_audit = @permscope.audit_header_block(
     header_block,
     @permscope.catalog_baseline("https://app.example"),
   )
+  let security_audit = @permscope.audit_security_header_block(
+    header_block, "https://app.example",
+  )
+  let batch = @permscope.audit_response_samples([
+    @permscope.response_sample("home", "/", "https://app.example", header_block),
+    @permscope.response_sample_from_bundle(
+      "api",
+      "/api",
+      @permscope.api_service_security_bundle("https://api.example"),
+    ),
+  ])
   let matrix = @permscope.access_matrix(
     policy,
     ["camera", "fullscreen", "usb"],
@@ -60,5 +79,12 @@ fn main {
   )
   println(@permscope.render_header_audit(header_audit))
   println(@permscope.render_access_matrix(matrix))
+  println(@permscope.render_security_score(security_audit.score))
+  println(
+    @permscope.render_security_finding_summary(
+      @permscope.summarize_security_findings(security_audit),
+    ),
+  )
+  println(@permscope.render_batch_audit(batch))
   println(@permscope.render_diffs(@permscope.diff(policy, relaxed)))
 }

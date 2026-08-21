@@ -12,11 +12,37 @@ pub fn all_origins(String) -> PolicyIntent
 
 pub fn allows(Policy, String, String, String) -> Bool
 
+pub fn api_service_security_bundle(String) -> SecurityHeaderBundle
+
+pub fn app_csp_header(Array[String], Array[String]) -> String
+
 pub fn audit(Policy, Baseline) -> AuditReport
+
+pub fn audit_csp(CspPolicy) -> AuditReport
 
 pub fn audit_header_block(String, Baseline) -> HeaderAudit
 
+pub fn audit_response_sample(ResponseSample) -> SecurityAudit
+
+pub fn audit_response_samples(Array[ResponseSample]) -> BatchAudit
+
+pub fn audit_security_bundle(SecurityHeaderBundle) -> SecurityAudit
+
+pub fn audit_security_header_block(String, String) -> SecurityAudit
+
+pub fn audit_security_headers(HeaderSet, String) -> SecurityAudit
+
 pub fn balanced_profile() -> BaselineProfile
+
+pub fn batch_recommendations(BatchAudit) -> Array[BatchRecommendation]
+
+pub fn batch_samples_with_high(BatchAudit) -> Array[SampleScore]
+
+pub fn batch_scores_at_or_below(BatchAudit, String) -> Array[SampleScore]
+
+pub fn batch_security_gate(BatchAudit, String, Int, Int) -> BatchGate
+
+pub fn best_sample_score(BatchAudit) -> SampleScore?
 
 pub fn build(Array[PolicyIntent]) -> String
 
@@ -24,19 +50,53 @@ pub fn build_policy(Array[PolicyIntent]) -> Policy
 
 pub fn built_in_profiles() -> Array[BaselineProfile]
 
+pub fn bundle_header_value(SecurityHeaderBundle, String) -> String?
+
 pub fn catalog_baseline(String) -> Baseline
 
+pub fn compare_security_audits(SecurityAudit, SecurityAudit) -> Array[SecurityRegression]
+
+pub fn csp_allows_eval(CspPolicy) -> Bool
+
+pub fn csp_allows_inline_script(CspPolicy) -> Bool
+
+pub fn csp_core_directives() -> Array[String]
+
+pub fn csp_directive(CspPolicy, String) -> CspDirective?
+
+pub fn csp_effective_values(CspPolicy, String) -> Array[String]
+
+pub fn csp_fallback_chain(String) -> Array[String]
+
+pub fn csp_has_nonce_or_hash(CspPolicy, String) -> Bool
+
+pub fn csp_has_source(CspPolicy, String, String) -> Bool
+
+pub fn csp_source_directive_names() -> Array[String]
+
+pub fn csp_source_expression(String) -> SourceExpression
+
+pub fn csp_sources(CspPolicy, String) -> Array[SourceExpression]
+
 pub fn default_baseline(String) -> Baseline
+
+pub fn default_security_recommendations() -> Array[HeaderRecommendation]
 
 pub fn deny(String) -> PolicyIntent
 
 pub fn device_lab_profile() -> BaselineProfile
+
+pub fn device_lab_security_bundle(String, Array[String]) -> SecurityHeaderBundle
 
 pub fn diff(Policy, Policy) -> Array[PolicyDiff]
 
 pub fn directive(Policy, String) -> Directive?
 
 pub fn feature_policy_header(HeaderSet) -> String?
+
+pub fn header_check_severity(HeaderCheck) -> String
+
+pub fn header_values(HeaderSet, String) -> Array[String]
 
 pub fn known_feature(String) -> FeatureSpec?
 
@@ -48,9 +108,15 @@ pub fn matrix_cell(AccessMatrix, String, String) -> AccessCell?
 
 pub fn media_app_profile() -> BaselineProfile
 
+pub fn media_security_bundle(String, Array[String], Array[String]) -> SecurityHeaderBundle
+
 pub fn migrate_feature_policy(String) -> String
 
+pub fn named_security_bundle(String, String) -> SecurityHeaderBundle
+
 pub fn parse(String) -> Policy
+
+pub fn parse_csp(String) -> CspPolicy
 
 pub fn parse_feature_policy(String) -> Policy
 
@@ -76,23 +142,107 @@ pub fn render(Policy) -> String
 
 pub fn render_access_matrix(AccessMatrix) -> String
 
+pub fn render_batch_audit(BatchAudit) -> String
+
+pub fn render_batch_gate(BatchGate) -> String
+
+pub fn render_batch_json(BatchAudit) -> String
+
+pub fn render_batch_markdown(BatchAudit) -> String
+
+pub fn render_batch_recommendations(Array[BatchRecommendation]) -> String
+
+pub fn render_csp(CspPolicy) -> String
+
+pub fn render_csp_audit(AuditReport) -> String
+
+pub fn render_csp_summary(CspSummary) -> String
+
 pub fn render_diffs(Array[PolicyDiff]) -> String
 
 pub fn render_header_audit(HeaderAudit) -> String
+
+pub fn render_header_check(HeaderCheck) -> String
 
 pub fn render_profile(BaselineProfile, Array[String]) -> String
 
 pub fn render_report(AuditReport) -> String
 
+pub fn render_sample_score(SampleScore) -> String
+
+pub fn render_security_audit(SecurityAudit) -> String
+
+pub fn render_security_badge(SecurityAudit) -> String
+
+pub fn render_security_bundle(SecurityHeaderBundle) -> String
+
+pub fn render_security_bundle_notes(SecurityHeaderBundle) -> String
+
+pub fn render_security_check_table(SecurityAudit) -> String
+
+pub fn render_security_coverage(SecurityCoverage) -> String
+
+pub fn render_security_finding_summary(SecurityFindingSummary) -> String
+
+pub fn render_security_gate(SecurityGate) -> String
+
+pub fn render_security_json(SecurityAudit) -> String
+
+pub fn render_security_markdown(SecurityAudit) -> String
+
+pub fn render_security_recommendations(Array[HeaderRecommendation]) -> String
+
+pub fn render_security_regressions(Array[SecurityRegression]) -> String
+
+pub fn render_security_score(SecurityScore) -> String
+
 pub fn render_summary(PolicySummary) -> String
+
+pub fn response_sample(String, String, String, String) -> ResponseSample
+
+pub fn response_sample_from_bundle(String, String, SecurityHeaderBundle) -> ResponseSample
+
+pub fn security_bundle_names() -> Array[String]
+
+pub fn security_check(SecurityAudit, String) -> HeaderCheck?
+
+pub fn security_coverage(SecurityAudit) -> SecurityCoverage
+
+pub fn security_finding_codes(SecurityAudit) -> Array[String]
+
+pub fn security_findings_by_severity(SecurityAudit, String) -> Array[Finding]
+
+pub fn security_gate(SecurityAudit, String, Bool) -> SecurityGate
+
+pub fn security_grade_at_least(SecurityAudit, String) -> Bool
+
+pub fn security_has_no_high(SecurityAudit) -> Bool
+
+pub fn security_header_entry(String, String) -> SecurityHeaderEntry
+
+pub fn security_header_names() -> Array[String]
+
+pub fn security_recommendations(SecurityAudit) -> Array[HeaderRecommendation]
 
 pub fn self_and_origins(String, Array[String]) -> PolicyIntent
 
 pub fn self_only(String) -> PolicyIntent
 
+pub fn static_site_security_bundle(String) -> SecurityHeaderBundle
+
+pub fn strict_csp_header() -> String
+
 pub fn strict_profile() -> BaselineProfile
 
+pub fn strict_security_bundle(String) -> SecurityHeaderBundle
+
 pub fn summarize(Policy, Baseline) -> PolicySummary
+
+pub fn summarize_csp(CspPolicy) -> CspSummary
+
+pub fn summarize_security_findings(SecurityAudit) -> SecurityFindingSummary
+
+pub fn weakest_sample_score(BatchAudit) -> SampleScore?
 
 // Errors
 
@@ -132,6 +282,57 @@ pub enum BaselineProfile {
   ProfileBalanced
   ProfileMediaApp
   ProfileDeviceLab
+} derive(Eq, @debug.Debug)
+
+pub struct BatchAudit {
+  samples : Array[ResponseSample]
+  audits : Array[SecurityAudit]
+  scores : Array[SampleScore]
+  average_percent : Int
+  worst_grade : String
+  high_total : Int
+  warning_total : Int
+} derive(Eq, @debug.Debug)
+
+pub struct BatchGate {
+  ok : Bool
+  required_grade : String
+  max_high : Int
+  max_warning : Int
+  messages : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub struct BatchRecommendation {
+  sample : String
+  path : String
+  header : String
+  value : String
+  priority : String
+  reason : String
+} derive(Eq, @debug.Debug)
+
+pub struct CspDirective {
+  name : String
+  values : Array[String]
+  raw : String
+  index : Int
+} derive(Eq, @debug.Debug)
+
+pub struct CspPolicy {
+  directives : Array[CspDirective]
+  warnings : Array[ParseWarning]
+} derive(Eq, @debug.Debug)
+
+pub struct CspSummary {
+  directive_count : Int
+  source_directives : Int
+  wildcard_sources : Int
+  unsafe_inline : Int
+  unsafe_eval : Int
+  nonce_sources : Int
+  hash_sources : Int
+  insecure_sources : Int
+  missing_core : Array[String]
 } derive(Eq, @debug.Debug)
 
 pub enum DiffKind {
@@ -186,6 +387,16 @@ pub struct HeaderAudit {
   migration : String
 } derive(Eq, @debug.Debug)
 
+pub struct HeaderCheck {
+  header : String
+  present : Bool
+  score : Int
+  max_score : Int
+  findings : Array[Finding]
+  observed : String
+  recommended : String
+} derive(Eq, @debug.Debug)
+
 pub enum HeaderKind {
   HeaderPermissionsPolicy
   HeaderFeaturePolicy
@@ -197,6 +408,13 @@ pub struct HeaderLine {
   value : String
   index : Int
   kind : HeaderKind
+} derive(Eq, @debug.Debug)
+
+pub struct HeaderRecommendation {
+  header : String
+  value : String
+  reason : String
+  priority : String
 } derive(Eq, @debug.Debug)
 
 pub struct HeaderSet {
@@ -237,16 +455,107 @@ pub struct PolicySummary {
   missing_sensitive : Array[String]
 } derive(Eq, @debug.Debug)
 
+pub struct ResponseSample {
+  name : String
+  path : String
+  document_origin : String
+  header_block : String
+} derive(Eq, @debug.Debug)
+
 pub enum RiskLevel {
   RiskLow
   RiskMedium
   RiskHigh
 } derive(Eq, @debug.Debug)
 
+pub struct SampleScore {
+  name : String
+  path : String
+  grade : String
+  points : Int
+  max_points : Int
+  percent : Int
+  high : Int
+  warning : Int
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityAudit {
+  headers : HeaderSet
+  csp : CspPolicy?
+  permissions : HeaderAudit
+  checks : Array[HeaderCheck]
+  score : SecurityScore
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityCoverage {
+  required : Int
+  present : Int
+  strong : Int
+  missing : Array[String]
+  weak : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityFindingSummary {
+  total : Int
+  high : Int
+  warning : Int
+  info : Int
+  high_codes : Array[String]
+  warning_codes : Array[String]
+  info_codes : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityGate {
+  ok : Bool
+  required_grade : String
+  actual_grade : String
+  allow_warnings : Bool
+  messages : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityHeaderBundle {
+  name : String
+  description : String
+  document_origin : String
+  headers : Array[SecurityHeaderEntry]
+  notes : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityHeaderEntry {
+  name : String
+  value : String
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityRegression {
+  header : String
+  before_score : Int
+  after_score : Int
+  delta : Int
+  severity : String
+  message : String
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityScore {
+  points : Int
+  max_points : Int
+  percent : Int
+  grade : String
+  high : Int
+  warning : Int
+  info : Int
+} derive(Eq, @debug.Debug)
+
 pub enum Severity {
   SeverityInfo
   SeverityWarning
   SeverityHigh
+} derive(Eq, @debug.Debug)
+
+pub struct SourceExpression {
+  value : String
+  kind : String
+  secure : Bool
+  wildcard : Bool
 } derive(Eq, @debug.Debug)
 
 // Type aliases

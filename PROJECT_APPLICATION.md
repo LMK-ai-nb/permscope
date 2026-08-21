@@ -9,7 +9,7 @@
 
 ## 项目用途
 
-`permscope` 是一个使用 MoonBit 实现的 `Permissions-Policy` HTTP 响应头解析与安全审计库。它面向 Web 框架、网关、静态站点检查器和 CI 工具，帮助开发者判断页面是否过度开放摄像头、麦克风、地理位置、USB、支付等浏览器能力，并把检查结果输出为可读报告。
+`permscope` 是一个使用 MoonBit 实现的 HTTP 安全响应头解析与审计库，以 `Permissions-Policy` 深度解析为核心，并扩展到 CSP、HSTS、Referrer-Policy、X-Frame-Options、X-Content-Type-Options、COOP、COEP、CORP 等常见安全头。它面向 Web 框架、网关、静态站点检查器和 CI 工具，帮助开发者判断页面是否过度开放浏览器能力、脚本执行能力、跨源加载能力和信息泄露风险，并把检查结果输出为可读报告。
 
 ## 现有基础
 
@@ -17,15 +17,15 @@
 
 ## 本次计划开发内容
 
-本次黑客松计划完成一个可复用的基础版本：解析现代 `Permissions-Policy` 语法，兼容旧版 `Feature-Policy` 迁移，支持 `self`、`*`、空 allowlist 和显式 origin 判断，提供默认安全基线，并输出适合 CI 日志使用的审计报告。同时提供声明式 header 构建器、内置浏览器能力目录、推荐 header、部署 profile、原始响应头块解析、策略摘要、访问矩阵和策略 diff 能力，帮助开发者在代码评审或 CI 中发现策略变宽、变窄或被删除的变化。
+本次黑客松计划完成一个可复用的基础版本：解析现代 `Permissions-Policy` 语法，兼容旧版 `Feature-Policy` 迁移，支持 `self`、`*`、空 allowlist 和显式 origin 判断，提供默认安全基线，并输出适合 CI 日志使用的审计报告。同时提供声明式 header 构建器、内置浏览器能力目录、推荐 header、部署 profile、原始响应头块解析、CSP 子集解析、安全头综合评分、修复建议、CI gate、批量路由审计、策略摘要、访问矩阵和策略 diff 能力，帮助开发者在代码评审或 CI 中发现策略变宽、变窄、缺失或被删除的变化。
 
 ## 技术路线
 
-项目以 MoonBit 作为主要实现语言，核心逻辑由纯函数组成：先把 header 文本解析为 `Policy`、`Directive` 和 `AllowToken`，再通过 `allows` 判断某个 feature 对某个 origin 是否可用，最后由 `audit` 按基线生成风险报告。库本身不发起网络请求、不绑定具体 Web 框架，便于后续接入命令行工具、服务器中间件或文档生成流程。
+项目以 MoonBit 作为主要实现语言，核心逻辑由纯函数组成：先把 header 文本解析为 `Policy`、`Directive`、`AllowToken`、`CspPolicy` 和通用 header 集合，再通过 `allows`、CSP source 分析和安全头检查判断某个能力、origin 或响应头配置是否安全，最后由 `audit`、`audit_security_header_block` 和 `audit_response_samples` 按基线生成风险报告、等级分数和批量结果。库本身不发起网络请求、不绑定具体 Web 框架，便于后续接入命令行工具、服务器中间件或文档生成流程。
 
 ## 预期功能、测试和文档
 
-预期功能包括：现代 header 解析、旧版 header 迁移、allowlist 规范化、敏感能力审计、风险分级、声明式 header 构建、浏览器能力目录、推荐策略生成、内置部署 profile、`curl -I` 风格响应头块审计、feature/origin 访问矩阵、策略摘要、策略 diff、稳定文本渲染和可运行 demo。测试覆盖解析、重复 directive、错误格式、origin 判断、默认基线、通配符风险、旧版迁移、构建器、能力目录、profile 生成、响应头块解析、访问矩阵、摘要统计和策略比较。文档包括 README、设计说明、测试记录、更新日志和查重说明。
+预期功能包括：现代 header 解析、旧版 header 迁移、allowlist 规范化、敏感能力审计、风险分级、声明式 header 构建、浏览器能力目录、推荐策略生成、内置部署 profile、CSP 解析与审计、HSTS 和常见安全头审计、`curl -I` 风格响应头块审计、feature/origin 访问矩阵、批量路由安全评分、CI gate、修复建议、策略摘要、策略 diff、稳定文本渲染和可运行 demo。测试覆盖解析、重复 directive、错误格式、origin 判断、默认基线、通配符风险、旧版迁移、构建器、能力目录、profile 生成、响应头块解析、CSP 风险、安全头基线、批量审计、访问矩阵、摘要统计和策略比较。文档包括 README、设计说明、测试记录、更新日志和查重说明。
 
 ## 后续维护价值
 

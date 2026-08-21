@@ -2,9 +2,10 @@
 
 ## Goal
 
-`permscope` focuses on one reusable job: parse and audit
-`Permissions-Policy` response headers without pulling in an HTTP server,
-browser runtime, or framework adapter.
+`permscope` focuses on one reusable job: parse and audit HTTP security response
+headers without pulling in an HTTP server, browser runtime, or framework
+adapter. `Permissions-Policy` remains the deepest parser, while CSP and other
+headers provide a broader response-level security score.
 
 ## Data Model
 
@@ -24,6 +25,15 @@ browser runtime, or framework adapter.
   blocks without adding a network client.
 - `AccessMatrix` records feature/origin decisions for documentation and review
   workflows.
+- `CspPolicy`, `CspDirective`, `CspSummary`, and `SourceExpression` represent a
+  practical CSP subset.
+- `HeaderCheck`, `SecurityScore`, and `SecurityAudit` aggregate CSP,
+  Permissions-Policy, HSTS, referrer, clickjacking, MIME sniffing, and
+  cross-origin isolation checks.
+- `SecurityHeaderBundle` stores reusable deployment presets for strict,
+  static-site, API-service, media-app, and device-lab scenarios.
+- `ResponseSample` and `BatchAudit` support multi-route or multi-environment
+  security reviews.
 
 ## Parsing Strategy
 
@@ -55,6 +65,28 @@ status lines, classifies modern and legacy policy headers, and preserves
 non-fatal parse issues as warnings. Modern `Permissions-Policy` takes precedence
 when both modern and legacy headers are present; legacy `Feature-Policy` is used
 only as a migration fallback.
+
+## CSP Strategy
+
+The CSP parser focuses on source directives commonly needed in CI checks:
+`default-src`, `script-src`, `style-src`, `img-src`, `connect-src`,
+`object-src`, `base-uri`, `frame-ancestors`, and `form-action`. It recognizes
+wildcards, `unsafe-inline`, `unsafe-eval`, HTTP sources, nonce/hash sources, and
+fallback to `default-src`. The goal is not to implement a browser, but to catch
+high-value production risks.
+
+## Security-Header Strategy
+
+The response-level auditor turns each header family into a `HeaderCheck` with
+points, maximum points, findings, observed value, and recommended value. The
+final `SecurityScore` is deterministic and easy to place in CI logs: it records
+points, percentage, grade, and severity counts.
+
+## Bundle and Batch Strategy
+
+Bundles generate concrete response header blocks for common deployment profiles.
+Batch audits let callers check multiple routes or environments, compare sample
+scores, collect recommendations, and enforce a CI gate across all samples.
 
 ## Profile Strategy
 
