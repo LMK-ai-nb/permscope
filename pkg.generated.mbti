@@ -20,6 +20,10 @@ pub fn audit(Policy, Baseline) -> AuditReport
 
 pub fn audit_capability_contract(Policy, CapabilityContract) -> CapabilityContractReport
 
+pub fn audit_capability_inventory(Array[ResponseSample], Array[CapabilityContract]) -> CapabilityInventoryAudit
+
+pub fn audit_capability_response(ResponseSample, CapabilityContract) -> CapabilityResponseAudit
+
 pub fn audit_csp(CspPolicy) -> AuditReport
 
 pub fn audit_header_block(String, Baseline) -> HeaderAudit
@@ -169,6 +173,10 @@ pub fn render_batch_markdown(BatchAudit) -> String
 pub fn render_batch_recommendations(Array[BatchRecommendation]) -> String
 
 pub fn render_capability_contract_report(CapabilityContractReport) -> String
+
+pub fn render_capability_inventory(CapabilityInventoryAudit) -> String
+
+pub fn render_capability_response_audit(CapabilityResponseAudit) -> String
 
 pub fn render_csp(CspPolicy) -> String
 
@@ -354,11 +362,28 @@ pub struct CapabilityFinding {
   message : String
 } derive(Eq, @debug.Debug)
 
+pub struct CapabilityInventoryAudit {
+  audits : Array[CapabilityResponseAudit]
+  findings : Array[CapabilityInventoryFinding]
+  ok : Bool
+} derive(Eq, @debug.Debug)
+
+pub struct CapabilityInventoryFinding {
+  code : String
+  name : String
+  message : String
+} derive(Eq, @debug.Debug)
+
 pub struct CapabilityNeed {
   feature : String
   target_origins : Array[String]
   reason : String
   required : Bool
+} derive(Eq, @debug.Debug)
+
+pub struct CapabilityResponseAudit {
+  sample : ResponseSample
+  report : CapabilityContractReport
 } derive(Eq, @debug.Debug)
 
 type ContractCounters derive(Eq, @debug.Debug)
