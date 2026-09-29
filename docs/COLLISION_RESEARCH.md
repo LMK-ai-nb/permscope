@@ -55,3 +55,13 @@ Related but different directions:
 The CSP, HSTS, referrer, clickjacking, MIME sniffing, and cross-origin isolation
 checks are supporting response-header context. They do not change the project
 boundary into a general-purpose web security scanner.
+
+## September Recheck (2026-09-30)
+
+Mooncakes search found adjacent work such as
+[`unmbt/http-server-mbt`](https://mooncakes.io/docs/unmbt/http-server-mbt@0.3.3/core)
+and [`bobzhang/crescent`](https://skills.mooncakes.io/docs/bobzhang/crescent).
+These provide HTTP frameworks or security-header application. The maintained
+`permscope` value is contract checking of observed route-level browser
+capability policy. Search results are not an exhaustive originality guarantee;
+the September entry relies on the concrete added audit behavior and tests.

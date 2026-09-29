@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.2 (unreleased)
+
+- Audit only the final HTTP response block in redirect and interim-response
+  chains, preventing earlier hops from supplying a missing final security
+  policy. Add regression coverage and a redirect-aware route example.
+- Reject undeclared low-risk capability exposure in strict contracts and
+  missing explicit restrictions for declared features, plus malformed policies.
+- Add observed-response capability audit with missing-header, malformed-policy,
+  and origin-mismatch checks.
+- Add a named route inventory audit that rejects missing, undeclared, duplicate,
+  or failing response samples.
+- Add a runnable route contract example and regression tests.
+- Add September community-maintenance application and release/provenance notes.
+
 ## 0.1.1
 
 - Add route-level capability contracts for `Permissions-Policy` boundary checks.

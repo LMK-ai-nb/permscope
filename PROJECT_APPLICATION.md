@@ -1,4 +1,6 @@
-# permscope 项目申报书
+# permscope 项目申报书（8月初版留档）
+
+9 月社区维护项目申报材料见 [docs/SEPTEMBER_APPLICATION.md](docs/SEPTEMBER_APPLICATION.md)。
 
 - 参赛人：李明坤
 - GitHub 账号：LMK-ai-nb

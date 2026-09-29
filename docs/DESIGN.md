@@ -65,11 +65,14 @@ power.
 
 ## Header-Block Strategy
 
-The header-block parser accepts line-oriented response header text, ignores HTTP
-status lines, classifies modern and legacy policy headers, and preserves
-non-fatal parse issues as warnings. Modern `Permissions-Policy` takes precedence
-when both modern and legacy headers are present; legacy `Feature-Policy` is used
-only as a migration fallback.
+The header-block parser accepts line-oriented response header text. Each HTTP
+status line starts a new response block, so `curl -I -L` redirect and interim
+responses cannot contribute headers or parse warnings to the final response.
+Without a status line, it treats the input as one header block. It classifies
+modern and legacy policy headers and preserves non-fatal parse issues from the
+selected block as warnings. Modern `Permissions-Policy` takes precedence when
+both modern and legacy headers are present; legacy `Feature-Policy` is used only
+as a migration fallback. The parser does not infer the final URL or origin.
 
 ## CSP Strategy
 
@@ -115,6 +118,24 @@ auditor compares those declarations with the parsed `Permissions-Policy`,
 detects blocked required capabilities, wildcard delegation, extra origins, and
 undeclared features left open by default. `minimal_policy_for_contract` can
 generate the strictest known-feature header that satisfies the declaration.
+Strict contracts fail when any undeclared capability remains enabled, even if
+the feature itself has a lower risk tier. A missing directive for a declared
+feature is treated as lacking an explicit header restriction rather than proof
+that the declared origin is the only origin allowed. This does not model
+browser-specific default allowlists or user permission prompts.
+Any policy parse warning also fails the contract, so malformed input cannot
+produce an apparent pass.
+
+## Observed Response Strategy
+
+`audit_capability_response` pairs a route's `ResponseSample` with its
+`CapabilityContract`. It parses the observed header block, runs the contract
+audit, and fails closed when the modern policy header is absent, any parse
+warning is present, or the response origin differs from the contract origin.
+The returned report retains findings for CI logs and names the route path.
+`audit_capability_inventory` joins observed samples and declarations by route
+name, checks uniqueness and coverage in both directions, and combines the
+route audits. Empty inventories fail instead of passing vacuously.
 
 ## Catalog Strategy
 

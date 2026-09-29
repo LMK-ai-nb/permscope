@@ -6,7 +6,7 @@ Supporting checks for CSP, HSTS, referrer, clickjacking, MIME sniffing, and
 cross-origin isolation provide response-header context around that core.
 
 `permscope` helps small web tools, gateways, static-site checks, and CI scripts
-answer three questions:
+answer questions such as:
 
 - Which browser capabilities does this header allow?
 - Are sensitive features such as camera, microphone, geolocation, payment, USB,
@@ -22,6 +22,9 @@ answer three questions:
 ## Status
 
 Initial August Hackathon version by 李明坤.
+The September work extends this existing project as a community maintenance
+entry. Version `0.1.1` is available on Mooncakes; `0.1.2` is the next release
+and must not be described as published until its package page is verified.
 
 ## Features
 
@@ -40,11 +43,16 @@ Initial August Hackathon version by 李明坤.
 - Compare two policies and classify loosened or tightened changes.
 - Summarize how many features are disabled, self-only, wildcard, or delegated to
   explicit origins.
-- Parse raw HTTP response header blocks copied from `curl -I` output.
+- Parse raw HTTP response headers copied from `curl -I -L` output, auditing
+  only the final response rather than mixing redirect-hop policies.
 - Audit the effective policy from modern and legacy response headers.
 - Render feature/origin access matrices for documentation and reviews.
 - Define route-level capability contracts and audit missing, overbroad, or
   undeclared `Permissions-Policy` delegations.
+- Audit an observed route response against its declared capability contract,
+  rejecting absent or malformed modern policy headers and origin mismatches.
+- Compare named route contracts with observed response samples as a CI
+  inventory, reporting missing, undeclared, or duplicate route names.
 - Generate the strictest `Permissions-Policy` header that satisfies a declared
   capability contract.
 - Parse and audit core `Content-Security-Policy` directives.
@@ -56,12 +64,25 @@ Initial August Hackathon version by 李明坤.
   gates, and batch reports across multiple routes.
 - Render stable text reports for CI logs or command-line tools.
 
+## Install
+
+The latest verified Mooncakes release is `0.1.1`:
+
+```bash
+moon add LMK-ai-nb/permscope@0.1.1
+```
+
+Add `"LMK-ai-nb/permscope"` to the `import` block of your `moon.pkg`, then
+call its functions through `@permscope`. The September `0.1.2` changes are in
+this source tree until a release is published and verified.
+
 ## Quick Start
 
 ```bash
 moon check
 moon test
 moon run cmd/main
+moon run examples/route_contract
 ```
 
 ## Example
@@ -113,6 +134,13 @@ Run the bundled demo:
 moon run cmd/main
 ```
 
+For observed responses, run `moon run examples/route_contract`. This example
+declares capability needs for `/video` and `/checkout`, builds scoped policies,
+checks synthetic response blocks and document origins, then checks both routes
+as an inventory. The `/video` sample includes a redirect whose broad policy
+must not override the final response. It prints a `route=/video` audit with
+`sample=video-room`, `contract: pass`, and `inventory: pass`.
+
 Expected highlights:
 
 ```text
@@ -133,8 +161,9 @@ permscope: pass
 - `parse_feature_policy(header)` parses old `Feature-Policy` syntax.
 - `migrate_feature_policy(header)` renders old syntax as modern syntax.
 - `directive(policy, feature)` returns the first directive for a feature.
-- `allows(policy, feature, document_origin, target_origin)` checks allowlist
-  behavior.
+- `allows(policy, feature, document_origin, target_origin)` checks whether the
+  supplied header restricts a feature for an origin; it does not model every
+  browser default, iframe policy, or user permission.
 - `default_baseline(document_origin)` creates a practical web-app security
   baseline.
 - `audit(policy, baseline)` reports risky wildcards, missing denies, parse
@@ -149,10 +178,18 @@ permscope: pass
   `minimal_policy_for_contract`, `audit_capability_contract`, and
   `render_capability_contract_report` provide scenario-level capability
   boundary checks.
+- `audit_capability_response(sample, contract)` and
+  `render_capability_response_audit` check an observed route response. This
+  strict path requires a modern `Permissions-Policy` header; use
+  `audit_header_block` to inspect legacy `Feature-Policy` for migration.
+- `audit_capability_inventory(samples, contracts)` and
+  `render_capability_inventory` join routes by trimmed name and fail on missing
+  samples, samples without contracts, duplicate names, or failing route audits.
 - `summarize` and `render_summary` produce compact dashboard-friendly counts.
 - `parse_header_block`, `permissions_policy_header`, `feature_policy_header`,
   `policy_from_headers`, `audit_header_block`, and `render_header_audit` work
-  with raw HTTP response header blocks.
+  with raw HTTP response header blocks. For multi-response `curl -I -L` text,
+  only the final HTTP status block contributes headers and parse warnings.
 - `access_matrix`, `matrix_cell`, and `render_access_matrix` explain whether
   selected features are allowed for selected origins.
 - `parse_csp`, `audit_csp`, `strict_csp_header`, and `app_csp_header` cover the
@@ -176,12 +213,30 @@ moon fmt --check
 moon check --deny-warn
 moon build
 moon test --deny-warn
+moon test --target js --deny-warn
 moon info
 moon run cmd/main
+moon run examples/route_contract
 ```
 
 The GitHub Actions workflow runs the same checks on every push and pull request.
 Generated `pkg.generated.mbti` files document the public MoonBit API.
+
+## Publishing
+
+The package name, repository, license, README, and version are defined in
+`moon.mod`. After validating the release candidate and syncing its source to
+the public default branch, inspect the package contents and publish with:
+
+```bash
+moon package --list
+moon whoami
+moon publish --frozen
+```
+
+Publishing needs the Mooncakes account authorized for the `LMK-ai-nb` namespace.
+Verify the resulting version on [Mooncakes](https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.1)
+before recording it as published. See [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Project Boundary
 
@@ -197,8 +252,15 @@ general contest review proof tool. Its core boundary is `Permissions-Policy`
 capability exposure: parsing, legacy migration, origin decisions, feature
 catalogs, access matrices, policy diffs, and capability contracts. Broader
 security-header scoring is supporting context for that capability workflow.
+The parser is a focused audit aid, not a browser implementation or a substitute
+for deployment testing. It does not fetch live URLs. Callers supply observed
+response headers and should verify browser-specific enforcement separately.
+For redirected URLs, pass the complete `curl -I -L` header output and the
+**final** document origin; `permscope` cannot infer that origin from headers.
 
 ## License
 
 Apache-2.0. This repository does not vendor third-party source code, fixtures,
-or media assets.
+or media assets. See [source and AI use](docs/PROVENANCE_AND_AI.md),
+[design notes](docs/DESIGN.md), [test record](docs/TEST_RECORD.md), and the
+[September application](docs/SEPTEMBER_APPLICATION.md).

@@ -39,8 +39,14 @@ jobs:
       - name: Test
         run: moon test --deny-warn
 
+      - name: Test JavaScript backend
+        run: moon test --target js --deny-warn
+
       - name: Interface info
         run: moon info
 
       - name: Run example
         run: moon run cmd/main
+
+      - name: Run route contract example
+        run: moon run examples/route_contract
