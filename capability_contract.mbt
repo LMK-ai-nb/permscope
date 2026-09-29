@@ -168,7 +168,9 @@ pub fn audit_capability_contract(
   }
   {
     contract: normalized,
-    ok: !capability_has_high(findings),
+    ok: policy.warnings.length() == 0 &&
+    !capability_has_high(findings) &&
+    (!normalized.forbid_unspecified || unexpected == 0),
     findings,
     allowed,
     missing,
@@ -262,7 +264,16 @@ fn audit_declared_capability(
     }
   }
   match directive(policy, need.feature) {
-    None => ()
+    None => {
+      counters = { ..counters, overbroad: counters.overbroad + 1 }
+      findings.push({
+        severity: SeverityHigh,
+        code: "capability-directive-missing",
+        feature: need.feature,
+        target_origin: "*",
+        message: "missing directive provides no explicit header restriction for this capability",
+      })
+    }
     Some(item) => {
       if has_wildcard(item.tokens) {
         counters = { ..counters, overbroad: counters.overbroad + 1 }
@@ -357,10 +368,10 @@ fn audit_unspecified_capabilities(
       counters = { ..counters, unexpected: counters.unexpected + 1 }
       findings.push({
         severity: feature_risk_severity(spec.feature),
-        code: "undeclared-feature-default-open",
+        code: "undeclared-feature-not-restricted",
         feature: spec.feature,
         target_origin: "https://cross-site.invalid",
-        message: "missing directive leaves an undeclared feature open by default",
+        message: "header does not explicitly restrict this undeclared feature",
       })
     }
   }

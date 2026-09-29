@@ -139,3 +139,76 @@ test "optional capability can be blocked without failing the contract" {
     true,
   )
 }
+
+///|
+test "strict contract rejects an undeclared low risk capability" {
+  let contract = @permscope.capability_contract(
+    "reader",
+    "https://docs.example",
+    [],
+    true,
+  )
+  let intents : Array[@permscope.PolicyIntent] = []
+  for spec in @permscope.known_features() {
+    if spec.feature == "web-share" {
+      intents.push(@permscope.self_only(spec.feature))
+    } else {
+      intents.push(@permscope.deny(spec.feature))
+    }
+  }
+  let report = @permscope.audit_capability_contract(
+    @permscope.parse(@permscope.build(intents)),
+    contract,
+  )
+  @test.assert_eq(report.ok, false)
+  @test.assert_eq(report.unexpected, 1)
+  @test.assert_eq(
+    @permscope.render_capability_contract_report(report).contains(
+      "warning undeclared-feature-enabled web-share",
+    ),
+    true,
+  )
+}
+
+///|
+test "contract rejects a missing directive for a declared capability" {
+  let contract = @permscope.capability_contract(
+    "checkout",
+    "https://shop.example",
+    [@permscope.capability_need("payment", ["self"], "checkout")],
+    false,
+  )
+  let report = @permscope.audit_capability_contract(
+    @permscope.parse("camera=()"),
+    contract,
+  )
+  @test.assert_eq(report.ok, false)
+  @test.assert_eq(report.overbroad, 1)
+  @test.assert_eq(
+    @permscope.render_capability_contract_report(report).contains(
+      "capability-directive-missing",
+    ),
+    true,
+  )
+}
+
+///|
+test "contract rejects a malformed policy with parse warnings" {
+  let contract = @permscope.capability_contract(
+    "reader",
+    "https://docs.example",
+    [],
+    false,
+  )
+  let report = @permscope.audit_capability_contract(
+    @permscope.parse("not-a-directive"),
+    contract,
+  )
+  @test.assert_eq(report.ok, false)
+  @test.assert_eq(
+    @permscope.render_capability_contract_report(report).contains(
+      "policy-parse-warning",
+    ),
+    true,
+  )
+}
