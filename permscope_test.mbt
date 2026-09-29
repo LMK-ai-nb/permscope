@@ -60,7 +60,7 @@ test "empty allowlist disables a feature for every origin" {
 }
 
 ///|
-test "missing directives remain allowed but audit can flag them" {
+test "missing directives impose no header restriction but audit flags them" {
   let policy = @permscope.parse("fullscreen=(self)")
   @test.assert_eq(
     @permscope.allows(
@@ -256,6 +256,52 @@ test "header block parser extracts modern permissions policy" {
     ),
     true,
   )
+}
+
+///|
+test "redirect chain uses only final response headers" {
+  let block = "HTTP/1.1 301 Moved Permanently\r\nPermissions-Policy: camera=*\r\nX-Trace: redirect\r\n\r\nHTTP/2 200\r\nPermissions-Policy: camera=()\r\nX-Trace: final\r\n\r\n"
+  let headers = @permscope.parse_header_block(block)
+  @test.assert_eq(headers.lines.length(), 2)
+  @test.assert_eq(headers.warnings.length(), 0)
+  @test.assert_eq(@permscope.header_values(headers, "x-trace"), ["final"])
+  match @permscope.permissions_policy_header(headers) {
+    None => @test.assert_eq(true, false)
+    Some(value) => @test.assert_eq(value, "camera=()")
+  }
+}
+
+///|
+test "interim response and redirect warnings do not leak into final response" {
+  let block = "HTTP/1.1 100 Continue\nBroken line\n\nHTTP/1.1 302 Found\nPermissions-Policy: camera=*\n\nHTTP/2 200\nPermissions-Policy: camera=(self)"
+  let headers = @permscope.parse_header_block(block)
+  @test.assert_eq(headers.warnings.length(), 0)
+  @test.assert_eq(headers.lines.length(), 1)
+  match @permscope.permissions_policy_header(headers) {
+    None => @test.assert_eq(true, false)
+    Some(value) => @test.assert_eq(value, "camera=(self)")
+  }
+}
+
+///|
+test "headerless final response does not inherit redirect policy" {
+  let block = "HTTP/1.1 302 Found\nPermissions-Policy: camera=()\n\nHTTP/2 200\n\n"
+  let headers = @permscope.parse_header_block(block)
+  @test.assert_eq(headers.lines.length(), 0)
+  @test.assert_eq(@permscope.permissions_policy_header(headers), None)
+}
+
+///|
+test "folded text resembling a status line cannot reset the response" {
+  let headers = @permscope.parse_header_block(
+    "HTTP/2 200\nPermissions-Policy: camera=()\n HTTP/3 200\nX-Trace: final",
+  )
+  @test.assert_eq(headers.lines.length(), 2)
+  @test.assert_eq(headers.warnings.length(), 1)
+  match @permscope.permissions_policy_header(headers) {
+    None => @test.assert_eq(true, false)
+    Some(value) => @test.assert_eq(value, "camera=()")
+  }
 }
 
 ///|

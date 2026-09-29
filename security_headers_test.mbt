@@ -140,6 +140,27 @@ test "header values helper returns repeated response headers" {
 }
 
 ///|
+test "security audit does not credit headers from an earlier redirect" {
+  let audit = @permscope.audit_security_header_block(
+    "HTTP/1.1 301 Moved Permanently\nContent-Security-Policy: default-src 'self'\nX-Content-Type-Options: nosniff\n\nHTTP/2 200\nReferrer-Policy: no-referrer",
+    "https://app.example",
+  )
+  @test.assert_eq(
+    @permscope.header_values(audit.headers, "content-security-policy").length(),
+    0,
+  )
+  @test.assert_eq(
+    @permscope.header_values(audit.headers, "x-content-type-options").length(),
+    0,
+  )
+  @test.assert_eq(
+    @permscope.header_values(audit.headers, "referrer-policy").length(),
+    1,
+  )
+  @test.assert_eq(@permscope.security_coverage(audit).present, 1)
+}
+
+///|
 test "bundle rendering creates auditable response header blocks" {
   let bundle = @permscope.static_site_security_bundle("https://docs.example")
   let block = @permscope.render_security_bundle(bundle)

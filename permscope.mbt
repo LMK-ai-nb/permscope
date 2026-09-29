@@ -161,7 +161,7 @@ pub struct HeaderLine {
 } derive(Eq, @debug.Debug)
 
 ///|
-/// Parsed HTTP response header block, suitable for `curl -I` output.
+/// Parsed final HTTP response header block, suitable for `curl -I -L` output.
 pub struct HeaderSet {
   lines : Array[HeaderLine]
   warnings : Array[ParseWarning]
@@ -632,10 +632,10 @@ pub fn render_profile(
 }
 
 ///|
-/// Parse an HTTP response header block such as `curl -I` output.
+/// Parse the final HTTP response header block, including `curl -I -L` output.
 pub fn parse_header_block(block : String) -> HeaderSet {
-  let lines : Array[HeaderLine] = []
-  let warnings : Array[ParseWarning] = []
+  let mut lines : Array[HeaderLine] = []
+  let mut warnings : Array[ParseWarning] = []
   let mut index = 0
   for line_view in block.split("\n") {
     index = index + 1
@@ -644,15 +644,19 @@ pub fn parse_header_block(block : String) -> HeaderSet {
     if clean == "" {
       continue
     }
-    if clean.to_lower().has_prefix("http/") {
-      continue
-    }
     if raw.has_prefix(" ") || raw.has_prefix("\t") {
       warnings.push({
         index,
         message: "folded header continuation is ignored",
         text: clean,
       })
+      continue
+    }
+    if clean.to_lower().has_prefix("http/") {
+      // Each status line begins a separate response; earlier redirects and
+      // informational responses must not contribute policy to the final one.
+      lines = []
+      warnings = []
       continue
     }
     match clean.find(":") {
@@ -935,9 +939,10 @@ pub fn directive(policy : Policy, feature : String) -> Directive? {
 ///|
 /// Decide whether a feature is allowed for a target origin.
 ///
-/// Missing directives are treated as allowed because the header does not impose
-/// a restriction for that feature. Use `audit` to flag missing restrictions for
-/// high-risk browser capabilities.
+/// Missing directives return true because this header adds no restriction for
+/// that feature. This does not assert that a browser will grant access: feature
+/// defaults, user permissions, and iframe policies are outside this check.
+/// Use `audit` to flag missing explicit restrictions.
 pub fn allows(
   policy : Policy,
   feature : String,
