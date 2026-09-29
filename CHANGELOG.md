@@ -2,6 +2,8 @@
 
 ## 0.1.2 (unreleased)
 
+- Count an explicitly enabled undeclared wildcard capability once in strict
+  contract findings, without also reporting it as a missing directive.
 - Audit only the final HTTP response block in redirect and interim-response
   chains, preventing earlier hops from supplying a missing final security
   policy. Add regression coverage and a redirect-aware route example.

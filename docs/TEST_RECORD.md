@@ -100,3 +100,12 @@ GitHub Actions and publication for `0.1.2` remain unverified.
 test plan because this Windows machine has no C compiler (`cl`, `cc`, `gcc`, or
 `clang`); it is not recorded as a passing backend. The CI workflow now includes
 the verified JavaScript backend test, but that CI step has not run remotely yet.
+
+## Undeclared-Capability Finding Deduplication (2026-09-30)
+
+The strict contract now reports an undeclared `camera=(*)` directive once,
+instead of also counting it as a missing restriction. A regression test checks
+both the finding code and the `unexpected` count. Local `moon fmt --check` and
+`moon check --deny-warn` passed; `moon test --deny-warn` and
+`moon test --target js --deny-warn` each passed 73/73 tests. This is still a
+local result, not a GitHub Actions result.

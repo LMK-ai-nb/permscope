@@ -171,6 +171,32 @@ test "strict contract rejects an undeclared low risk capability" {
 }
 
 ///|
+test "undeclared wildcard capability is reported once" {
+  let contract = @permscope.capability_contract(
+    "reader",
+    "https://docs.example",
+    [],
+    true,
+  )
+  let intents : Array[@permscope.PolicyIntent] = []
+  for spec in @permscope.known_features() {
+    if spec.feature == "camera" {
+      intents.push(@permscope.all_origins(spec.feature))
+    } else {
+      intents.push(@permscope.deny(spec.feature))
+    }
+  }
+  let report = @permscope.audit_capability_contract(
+    @permscope.parse(@permscope.build(intents)),
+    contract,
+  )
+  @test.assert_eq(report.ok, false)
+  @test.assert_eq(report.unexpected, 1)
+  @test.assert_eq(report.findings.length(), 1)
+  @test.assert_eq(report.findings[0].code, "undeclared-feature-enabled")
+}
+
+///|
 test "contract rejects a missing directive for a declared capability" {
   let contract = @permscope.capability_contract(
     "checkout",

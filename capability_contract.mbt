@@ -359,6 +359,7 @@ fn audit_unspecified_capabilities(
   }
   for spec in known_features() {
     if !contract_declares_feature(contract, spec.feature) &&
+      directive(policy, spec.feature) is None &&
       allows(
         policy,
         spec.feature,
