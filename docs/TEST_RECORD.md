@@ -109,3 +109,35 @@ both the finding code and the `unexpected` count. Local `moon fmt --check` and
 `moon check --deny-warn` passed; `moon test --deny-warn` and
 `moon test --target js --deny-warn` each passed 73/73 tests. This is still a
 local result, not a GitHub Actions result.
+
+## September Toolchain CI Repair (2026-09-30)
+
+GitHub Actions run `36714520671` on commit `740e935` failed at `moon fmt
+--check`. Its installer provided `moon 0.1.20260920` and `moonc v0.10.14`,
+while the first local candidate had been formatted with `moonc v0.10.10`.
+The new formatter requires trailing commas in several record literals. A
+matching toolchain was installed in an isolated local directory, without
+changing the system-wide MoonBit installation.
+
+With the matching toolchain, the only `moon check --deny-warn` diagnostics
+were `implicit_impl_as_method` migration warnings on existing derived `Eq`
+and `Debug` implementations. The root `moon.pkg` disables only this warning;
+all other enabled warnings still fail strict checks. A later maintenance
+release should migrate those derived methods explicitly and remove the
+exception.
+
+After the repair, the matching local toolchain passed:
+
+```text
+moon fmt --check                 passed
+moon check --deny-warn           passed
+moon build                       passed
+moon test --deny-warn            73 passed, 0 failed
+moon test --target js --deny-warn 73 passed, 0 failed
+moon info                        passed
+moon run cmd/main                passed
+moon run examples/route_contract passed
+moon package --list              passed
+```
+
+The repair is local until its own commit is pushed and GitHub Actions passes.

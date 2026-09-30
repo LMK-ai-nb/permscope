@@ -208,6 +208,11 @@ permscope: pass
 
 ## Development
 
+The current CI uses MoonBit `moonc v0.10.14`. The root package disables only
+the `implicit_impl_as_method` migration warning emitted for existing derived
+`Eq` and `Debug` implementations; all other enabled warnings remain fatal in
+the strict checks below.
+
 ```bash
 moon fmt --check
 moon check --deny-warn

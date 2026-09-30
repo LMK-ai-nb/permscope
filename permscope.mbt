@@ -480,7 +480,7 @@ pub fn catalog_baseline(document_origin : String) -> Baseline {
       deny_by_default.push(spec.feature)
     }
   }
-  { document_origin, sensitive_features, deny_by_default }
+  { document_origin, sensitive_features, deny_by_default, }
 }
 
 ///|
@@ -505,7 +505,7 @@ pub fn summarize(policy : Policy, baseline : Baseline) -> PolicySummary {
       missing_sensitive.push(feature)
     }
   }
-  { disabled, self_only, wildcard, explicit_origins, missing_sensitive }
+  { disabled, self_only, wildcard, explicit_origins, missing_sensitive, }
 }
 
 ///|
@@ -670,14 +670,14 @@ pub fn parse_header_block(block : String) -> HeaderSet {
         let name = normalize_header_name(clean[:colon].to_owned())
         let value = trim(clean[colon + 1:].to_owned())
         if name == "" {
-          warnings.push({ index, message: "empty header name", text: clean })
+          warnings.push({ index, message: "empty header name", text: clean, })
         } else {
-          lines.push({ name, value, index, kind: classify_header_name(name) })
+          lines.push({ name, value, index, kind: classify_header_name(name), })
         }
       }
     }
   }
-  { lines, warnings }
+  { lines, warnings, }
 }
 
 ///|
@@ -856,8 +856,8 @@ pub fn parse(header : String) -> Policy {
   let warnings : Array[ParseWarning] = []
   let clean = trim(header)
   if clean == "" {
-    warnings.push({ index: 0, message: "empty header", text: header })
-    return { directives, warnings }
+    warnings.push({ index: 0, message: "empty header", text: header, })
+    return { directives, warnings, }
   }
   let mut index = 0
   for part_view in clean.split(",") {
@@ -885,7 +885,7 @@ pub fn parse(header : String) -> Policy {
       }
     }
   }
-  { directives, warnings }
+  { directives, warnings, }
 }
 
 ///|
@@ -896,8 +896,8 @@ pub fn parse_feature_policy(header : String) -> Policy {
   let warnings : Array[ParseWarning] = []
   let clean = trim(header)
   if clean == "" {
-    warnings.push({ index: 0, message: "empty legacy header", text: header })
-    return { directives, warnings }
+    warnings.push({ index: 0, message: "empty legacy header", text: header, })
+    return { directives, warnings, }
   }
   let mut index = 0
   for part_view in clean.split(";") {
@@ -921,7 +921,7 @@ pub fn parse_feature_policy(header : String) -> Policy {
       }
     }
   }
-  { directives, warnings }
+  { directives, warnings, }
 }
 
 ///|
@@ -1035,7 +1035,7 @@ pub fn audit(policy : Policy, baseline : Baseline) -> AuditReport {
       message: "policy satisfies the selected baseline",
     })
   }
-  { ok: !has_high(findings), findings }
+  { ok: !has_high(findings), findings, }
 }
 
 ///|
@@ -1063,7 +1063,7 @@ pub fn build_policy(intents : Array[PolicyIntent]) -> Policy {
     }
     directives.push(directive)
   }
-  { directives, warnings }
+  { directives, warnings, }
 }
 
 ///|
@@ -1166,14 +1166,14 @@ fn parse_modern_directive(
 ) -> Directive? {
   match part.find("=") {
     None => {
-      warnings.push({ index, message: "directive is missing '='", text: part })
+      warnings.push({ index, message: "directive is missing '='", text: part, })
       None
     }
     Some(eq) => {
       let feature = normalize_feature(part[:eq].to_owned())
       let value = trim(part[eq + 1:].to_owned())
       if feature == "" {
-        warnings.push({ index, message: "empty feature name", text: part })
+        warnings.push({ index, message: "empty feature name", text: part, })
         return None
       }
       if !feature_name_ok(feature) {
@@ -1229,7 +1229,7 @@ fn parse_legacy_directive(
           message: "legacy directive has no allowlist; treating as disabled",
           text: part,
         })
-        Some({ feature, tokens: [], raw: part, index })
+        Some({ feature, tokens: [], raw: part, index, })
       }
     }
     Some(space) => {
@@ -1346,7 +1346,7 @@ fn render_token(token : AllowToken) -> String {
 fn directive_from_intent(intent : PolicyIntent, index : Int) -> Directive {
   match intent {
     IntentDeny(feature) =>
-      { feature: normalize_feature(feature), tokens: [], raw: "", index }
+      { feature: normalize_feature(feature), tokens: [], raw: "", index, }
     IntentSelf(feature) =>
       {
         feature: normalize_feature(feature),
@@ -1367,14 +1367,14 @@ fn directive_from_intent(intent : PolicyIntent, index : Int) -> Directive {
       for origin in origins {
         tokens.push(TokenOrigin(normalize_origin(origin)))
       }
-      { feature: normalize_feature(feature), tokens, raw: "", index }
+      { feature: normalize_feature(feature), tokens, raw: "", index, }
     }
     IntentOriginsOnly(feature, origins) => {
       let tokens : Array[AllowToken] = []
       for origin in origins {
         tokens.push(TokenOrigin(normalize_origin(origin)))
       }
-      { feature: normalize_feature(feature), tokens, raw: "", index }
+      { feature: normalize_feature(feature), tokens, raw: "", index, }
     }
   }
 }
@@ -1673,7 +1673,7 @@ fn prepend_warnings(policy : Policy, warnings : Array[ParseWarning]) -> Policy {
   for warning in policy.warnings {
     merged.push(warning)
   }
-  { directives: policy.directives, warnings: merged }
+  { directives: policy.directives, warnings: merged, }
 }
 
 ///|

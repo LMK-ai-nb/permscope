@@ -54,7 +54,7 @@ pub fn audit_capability_response(
       findings.push(finding)
     }
   }
-  { sample, report: { ..base, ok: base.ok && !invalid_response, findings } }
+  { sample, report: { ..base, ok: base.ok && !invalid_response, findings, }, }
 }
 
 ///|

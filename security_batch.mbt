@@ -61,7 +61,7 @@ pub fn response_sample(
   document_origin : String,
   header_block : String,
 ) -> ResponseSample {
-  { name, path, document_origin, header_block }
+  { name, path, document_origin, header_block, }
 }
 
 ///|

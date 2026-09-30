@@ -52,7 +52,7 @@ pub fn security_header_entry(
   name : String,
   value : String,
 ) -> SecurityHeaderEntry {
-  { name, value }
+  { name, value, }
 }
 
 ///|
@@ -286,7 +286,7 @@ pub fn security_coverage(audit : SecurityAudit) -> SecurityCoverage {
       weak.push(check.header)
     }
   }
-  { required: audit.checks.length(), present, strong, missing, weak }
+  { required: audit.checks.length(), present, strong, missing, weak, }
 }
 
 ///|

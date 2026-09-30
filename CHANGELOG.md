@@ -2,6 +2,8 @@
 
 ## 0.1.2 (unreleased)
 
+- Align source formatting with the September MoonBit toolchain and keep strict
+  CI checks while isolating the derived-method migration warning.
 - Count an explicitly enabled undeclared wildcard capability once in strict
   contract findings, without also reporting it as a missing directive.
 - Audit only the final HTTP response block in redirect and interim-response

@@ -2,6 +2,10 @@ import {
   "moonbitlang/core/debug",
 }
 
+// Derived Eq and Debug trigger this migration-only warning in MoonBit 0.10.14.
+
+warnings = "-implicit_impl_as_method"
+
 import {
   "moonbitlang/core/test",
 } for "test"

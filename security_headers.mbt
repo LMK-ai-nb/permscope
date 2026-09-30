@@ -127,8 +127,8 @@ pub fn parse_csp(header : String) -> CspPolicy {
   let warnings : Array[ParseWarning] = []
   let clean = trim(header)
   if clean == "" {
-    warnings.push({ index: 0, message: "empty csp header", text: header })
-    return { directives, warnings }
+    warnings.push({ index: 0, message: "empty csp header", text: header, })
+    return { directives, warnings, }
   }
   let mut index = 0
   for part_view in clean.split(";") {
@@ -151,7 +151,7 @@ pub fn parse_csp(header : String) -> CspPolicy {
       }
     }
   }
-  { directives, warnings }
+  { directives, warnings, }
 }
 
 ///|
@@ -389,7 +389,7 @@ pub fn audit_csp(policy : CspPolicy) -> AuditReport {
       message: "CSP satisfies the built-in baseline",
     })
   }
-  { ok: !has_high(findings), findings }
+  { ok: !has_high(findings), findings, }
 }
 
 ///|
@@ -472,7 +472,7 @@ pub fn audit_security_headers(
   checks.push(check_cross_origin_embedder_policy(headers))
   checks.push(check_cross_origin_resource_policy(headers))
   let score = score_security_checks(checks)
-  { headers, csp: csp_policy, permissions, checks, score }
+  { headers, csp: csp_policy, permissions, checks, score, }
 }
 
 ///|
@@ -669,7 +669,7 @@ pub fn summarize_security_findings(
       }
     }
   }
-  { total, high, warning, info, high_codes, warning_codes, info_codes }
+  { total, high, warning, info, high_codes, warning_codes, info_codes, }
 }
 
 ///|
@@ -888,7 +888,7 @@ fn parse_csp_directive(
 ) -> CspDirective? {
   let tokens = split_words(part)
   if tokens.length() == 0 {
-    warnings.push({ index, message: "empty csp directive", text: part })
+    warnings.push({ index, message: "empty csp directive", text: part, })
     return None
   }
   let name = normalize_csp_name(tokens[0])
@@ -905,7 +905,7 @@ fn parse_csp_directive(
     values.push(normalize_csp_source(tokens[i]))
     i = i + 1
   }
-  Some({ name, values, raw: part, index })
+  Some({ name, values, raw: part, index, })
 }
 
 ///|

@@ -101,7 +101,7 @@ pub fn audit_capability_inventory(
       ok = false
     }
   }
-  { audits, findings, ok }
+  { audits, findings, ok, }
 }
 
 ///|

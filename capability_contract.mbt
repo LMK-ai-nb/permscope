@@ -45,7 +45,7 @@ pub fn capability_need(
   target_origins : Array[String],
   reason : String,
 ) -> CapabilityNeed {
-  { feature, target_origins, reason, required: true }
+  { feature, target_origins, reason, required: true, }
 }
 
 ///|
@@ -55,7 +55,7 @@ pub fn optional_capability_need(
   target_origins : Array[String],
   reason : String,
 ) -> CapabilityNeed {
-  { feature, target_origins, reason, required: false }
+  { feature, target_origins, reason, required: false, }
 }
 
 ///|
@@ -229,7 +229,7 @@ struct ContractCounters {
 
 ///|
 fn empty_contract_counters() -> ContractCounters {
-  { allowed: 0, missing: 0, overbroad: 0, unexpected: 0 }
+  { allowed: 0, missing: 0, overbroad: 0, unexpected: 0, }
 }
 
 ///|
@@ -242,9 +242,9 @@ fn audit_declared_capability(
   let mut counters = empty_contract_counters()
   for target in need_targets(need, contract.document_origin) {
     if allows(policy, need.feature, contract.document_origin, target) {
-      counters = { ..counters, allowed: counters.allowed + 1 }
+      counters = { ..counters, allowed: counters.allowed + 1, }
     } else if need.required {
-      counters = { ..counters, missing: counters.missing + 1 }
+      counters = { ..counters, missing: counters.missing + 1, }
       findings.push({
         severity: SeverityHigh,
         code: "required-capability-blocked",
@@ -265,7 +265,7 @@ fn audit_declared_capability(
   }
   match directive(policy, need.feature) {
     None => {
-      counters = { ..counters, overbroad: counters.overbroad + 1 }
+      counters = { ..counters, overbroad: counters.overbroad + 1, }
       findings.push({
         severity: SeverityHigh,
         code: "capability-directive-missing",
@@ -276,7 +276,7 @@ fn audit_declared_capability(
     }
     Some(item) => {
       if has_wildcard(item.tokens) {
-        counters = { ..counters, overbroad: counters.overbroad + 1 }
+        counters = { ..counters, overbroad: counters.overbroad + 1, }
         findings.push({
           severity: SeverityHigh,
           code: "capability-wildcard",
@@ -310,7 +310,7 @@ fn audit_extra_tokens(
       TokenAll => ()
       TokenSelf =>
         if !need_allows_target(need, contract.document_origin) {
-          counters = { ..counters, unexpected: counters.unexpected + 1 }
+          counters = { ..counters, unexpected: counters.unexpected + 1, }
           findings.push({
             severity: SeverityWarning,
             code: "unexpected-self-delegation",
@@ -322,7 +322,7 @@ fn audit_extra_tokens(
       TokenOrigin(origin) => {
         let target = normalize_origin(origin)
         if !need_allows_target(need, target) {
-          counters = { ..counters, unexpected: counters.unexpected + 1 }
+          counters = { ..counters, unexpected: counters.unexpected + 1, }
           findings.push({
             severity: feature_risk_severity(need.feature),
             code: "unexpected-origin-delegation",
@@ -347,7 +347,7 @@ fn audit_unspecified_capabilities(
   for item in policy.directives {
     if !contract_declares_feature(contract, item.feature) &&
       item.tokens.length() > 0 {
-      counters = { ..counters, unexpected: counters.unexpected + 1 }
+      counters = { ..counters, unexpected: counters.unexpected + 1, }
       findings.push({
         severity: feature_risk_severity(item.feature),
         code: "undeclared-feature-enabled",
@@ -366,7 +366,7 @@ fn audit_unspecified_capabilities(
         contract.document_origin,
         "https://cross-site.invalid",
       ) {
-      counters = { ..counters, unexpected: counters.unexpected + 1 }
+      counters = { ..counters, unexpected: counters.unexpected + 1, }
       findings.push({
         severity: feature_risk_severity(spec.feature),
         code: "undeclared-feature-not-restricted",
