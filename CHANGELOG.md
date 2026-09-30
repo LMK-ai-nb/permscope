@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.2 (unreleased)
+## 0.1.2 (2026-09-30)
 
 - Align source formatting with the September MoonBit toolchain and keep strict
   CI checks while isolating the derived-method migration warning.

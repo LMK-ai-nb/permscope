@@ -140,4 +140,22 @@ moon run examples/route_contract passed
 moon package --list              passed
 ```
 
-The repair is local until its own commit is pushed and GitHub Actions passes.
+At this stage the repair was local; the verification below records its later
+push and successful GitHub Actions run.
+
+## 0.1.2 Publication Verification (2026-09-30)
+
+The source commit `18e6375` was pushed to the public default branch, and
+[GitHub Actions run 36718051973](https://github.com/LMK-ai-nb/permscope/actions/runs/36718051973)
+passed. With the matching isolated toolchain, `moon fmt --check`,
+`moon check --deny-warn`, `moon build`, `moon info`, and
+`moon package --list` passed. The default and JavaScript test backends each
+passed 73/73 tests; `moon run examples/route_contract` completed and reported
+`contract: pass` and `inventory: pass`.
+
+Immediately before publishing, `moon whoami` returned `Logged in as LMK-ai-nb`.
+`moon publish --frozen` checked the packaged source and returned
+`Server status: 200 OK`. The [Mooncakes 0.1.2 page](https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.2)
+and its registry manifest identify `LMK-ai-nb/permscope@0.1.2` as the latest
+non-yanked version with `build_status: success`, Apache-2.0 license, and the
+project repository URL. This records a real publication, not a dry run.

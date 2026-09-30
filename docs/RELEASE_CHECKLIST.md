@@ -3,27 +3,34 @@
 ## Current Verified State (2026-09-30)
 
 - Public repository: https://github.com/LMK-ai-nb/permscope (`main`).
-- Published package: https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.1.
-- `0.1.2` is a local September release candidate, not a published package.
+- Published package: https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.2.
+- Release source commit: `18e63752af0a79d7d92f00041a1a0faa75c09b6b`.
+- GitHub Actions run: https://github.com/LMK-ai-nb/permscope/actions/runs/36718051973
+  (success for the release source commit).
+- Mooncakes manifest reports `0.1.2` as latest with `build_status: success`.
 
-## Before Publishing 0.1.2
+## 0.1.2 Publication Record
 
-- [ ] Confirm the September changes are committed to the existing Git history
+- [x] Confirm the September changes are committed to the existing Git history
       by 李明坤 / `LMK-ai-nb` and pushed to the default branch.
-- [ ] Confirm GitHub Actions passed for the exact release commit.
-- [ ] Run `moon fmt --check`, `moon check --deny-warn`, `moon build`,
+- [x] Confirm GitHub Actions passed for the exact release source commit.
+- [x] Run `moon fmt --check`, `moon check --deny-warn`, `moon build`,
       `moon test --deny-warn`, `moon info`, and both `moon run` examples.
-- [ ] Review `moon.mod`, README, license, provenance, changelog, and generated
+- [x] Review `moon.mod`, README, license, provenance, changelog, and generated
       public interface diff.
-- [ ] Run `moon package --list` and inspect the listed files for private data,
+- [x] Run `moon package --list` and inspect the listed files for private data,
       temporary files, and missing documentation.
-- [ ] Run `moon whoami` and confirm it prints `LMK-ai-nb` before any publish
-      command. The September 30 local session was authenticated as a different
-      account, and a dry-run publish returned HTTP 403 User mismatch.
-- [ ] Use the authorized `LMK-ai-nb` Mooncakes account to run
+- [x] Run `moon whoami` and confirm it prints `LMK-ai-nb` before any publish
+      command. An earlier local dry run under a different account returned
+      HTTP 403; that attempt did not publish anything.
+- [x] Use the authorized `LMK-ai-nb` Mooncakes account to run
       `moon publish --frozen`.
-- [ ] Open the exact `0.1.2` Mooncakes page and verify its package metadata.
-- [ ] Record the release commit, CI run, publication result, and page link.
+- [x] Open the exact `0.1.2` Mooncakes page and verify its package metadata.
+- [x] Record the release source commit, CI run, publication result, and page link.
+
+`moon publish --frozen` returned `Server status: 200 OK` on 2026-09-30.
+The registry manifest confirms the module name, version, repository, license,
+latest-version status, and successful package build.
 
 The registration form and event result are controlled by the organizers;
 local checks cannot confirm initial review or guarantee an award.

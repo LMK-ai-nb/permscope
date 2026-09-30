@@ -240,8 +240,8 @@ moon publish --frozen
 ```
 
 Publishing needs the Mooncakes account authorized for the `LMK-ai-nb` namespace.
-Verify the resulting version on [Mooncakes](https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.1)
-before recording it as published. See [release checklist](docs/RELEASE_CHECKLIST.md).
+Version `0.1.2` is published on [Mooncakes](https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.2).
+See the [release checklist](docs/RELEASE_CHECKLIST.md) for verification evidence.
 
 ## Project Boundary
 
