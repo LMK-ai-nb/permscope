@@ -1,13 +1,14 @@
 # Release Checklist
 
-## Current Verified State (2026-09-30)
+## Verified 0.1.2 Release (2026-09-30)
 
 - Public repository: https://github.com/LMK-ai-nb/permscope (`main`).
 - Published package: https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.2.
 - Release source commit: `18e63752af0a79d7d92f00041a1a0faa75c09b6b`.
 - GitHub Actions run: https://github.com/LMK-ai-nb/permscope/actions/runs/36718051973
   (success for the release source commit).
-- Mooncakes manifest reports `0.1.2` as latest with `build_status: success`.
+- Mooncakes manifest reported `0.1.2` as latest at publication, with
+  `build_status: success`.
 
 ## 0.1.2 Publication Record
 
@@ -29,8 +30,8 @@
 - [x] Record the release source commit, CI run, publication result, and page link.
 
 `moon publish --frozen` returned `Server status: 200 OK` on 2026-09-30.
-The registry manifest confirms the module name, version, repository, license,
-latest-version status, and successful package build.
+The registry manifest confirmed the module name, version, repository, license,
+latest-version status at publication, and successful package build.
 
 The registration form and event result are controlled by the organizers;
 local checks cannot confirm initial review or guarantee an award.

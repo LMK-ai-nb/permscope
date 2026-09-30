@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 (2026-09-30)
+
+- Correct the published README's release-status and installation guidance.
+- Keep the Mooncakes package link version-independent so later releases do not
+  make the instructions contradictory.
+- No MoonBit API or runtime behavior changes.
+
 ## 0.1.2 (2026-09-30)
 
 - Align source formatting with the September MoonBit toolchain and keep strict

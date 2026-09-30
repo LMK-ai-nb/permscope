@@ -156,6 +156,6 @@ passed 73/73 tests; `moon run examples/route_contract` completed and reported
 Immediately before publishing, `moon whoami` returned `Logged in as LMK-ai-nb`.
 `moon publish --frozen` checked the packaged source and returned
 `Server status: 200 OK`. The [Mooncakes 0.1.2 page](https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.2)
-and its registry manifest identify `LMK-ai-nb/permscope@0.1.2` as the latest
-non-yanked version with `build_status: success`, Apache-2.0 license, and the
+and its registry manifest identified `LMK-ai-nb/permscope@0.1.2` as the latest
+non-yanked version at that time, with `build_status: success`, Apache-2.0 license, and the
 project repository URL. This records a real publication, not a dry run.

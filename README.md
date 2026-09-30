@@ -23,8 +23,8 @@ answer questions such as:
 
 Initial August Hackathon version by 李明坤.
 The September work extends this existing project as a community maintenance
-entry. Version `0.1.1` is available on Mooncakes; `0.1.2` is the next release
-and must not be described as published until its package page is verified.
+entry. Published versions are listed on
+[Mooncakes](https://mooncakes.io/docs/LMK-ai-nb/permscope).
 
 ## Features
 
@@ -66,15 +66,15 @@ and must not be described as published until its package page is verified.
 
 ## Install
 
-The latest verified Mooncakes release is `0.1.1`:
+Install the latest published release:
 
 ```bash
-moon add LMK-ai-nb/permscope@0.1.1
+moon add LMK-ai-nb/permscope
 ```
 
 Add `"LMK-ai-nb/permscope"` to the `import` block of your `moon.pkg`, then
-call its functions through `@permscope`. The September `0.1.2` changes are in
-this source tree until a release is published and verified.
+call its functions through `@permscope`. Pin a version in `moon add` when a
+reproducible dependency version is needed.
 
 ## Quick Start
 
@@ -240,8 +240,9 @@ moon publish --frozen
 ```
 
 Publishing needs the Mooncakes account authorized for the `LMK-ai-nb` namespace.
-Version `0.1.2` is published on [Mooncakes](https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.2).
-See the [release checklist](docs/RELEASE_CHECKLIST.md) for verification evidence.
+The [Mooncakes package page](https://mooncakes.io/docs/LMK-ai-nb/permscope)
+lists published versions. See the [release checklist](docs/RELEASE_CHECKLIST.md)
+for verification evidence.
 
 ## Project Boundary
 
