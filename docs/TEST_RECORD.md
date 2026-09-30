@@ -159,3 +159,18 @@ Immediately before publishing, `moon whoami` returned `Logged in as LMK-ai-nb`.
 and its registry manifest identified `LMK-ai-nb/permscope@0.1.2` as the latest
 non-yanked version at that time, with `build_status: success`, Apache-2.0 license, and the
 project repository URL. This records a real publication, not a dry run.
+
+## 0.1.3 Documentation Patch (2026-09-30)
+
+Release source commit `a4b0032` corrected the README's outdated release and
+installation instructions without changing the MoonBit API or runtime code.
+`moon fmt --check`, `moon check --deny-warn`, `moon build`, `moon info`, and
+`moon package --list` passed locally. Default and JavaScript test backends each
+passed 73/73 tests. [GitHub Actions run 36734983284](https://github.com/LMK-ai-nb/permscope/actions/runs/36734983284)
+passed on the public `main` branch.
+
+The isolated Mooncakes session reported `Logged in as LMK-ai-nb` before
+`moon publish --frozen`, which returned `Server status: 200 OK`. The
+[Mooncakes 0.1.3 page](https://mooncakes.io/docs/LMK-ai-nb/permscope@0.1.3)
+and registry manifest show `0.1.3` as latest with `build_status: success`.
+The published README was checked for the removed stale status and install text.
